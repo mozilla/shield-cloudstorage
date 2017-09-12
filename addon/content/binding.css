@@ -1,0 +1,14 @@
+richlistitem[type="download"] {
+	-moz-binding: url("chrome://cloud/content/cloudstorage.xml#cloud-storage") !important;
+}
+
+
+richlistitem.download[active] {
+  -moz-binding: url("chrome://cloud/content/cloudstorage.xml#cloud-storage") !important;
+}
+
+.providerTypeIcon {
+  margin: 30px 0 0 38px;
+  width: 18px;
+  height: 18px;	
+}
