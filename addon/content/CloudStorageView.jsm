@@ -12,6 +12,7 @@ this.EXPORTED_SYMBOLS = [ "CloudStorageView" ];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "CloudStorage",
                                   "resource://gre/modules/CloudStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
@@ -44,6 +45,13 @@ var CloudStorageView = {
       this.studyUtils = studyUtils;
       this.propertiesURL = propertiesURL;
       await CloudViewInternal.init();
+      // Get number of providers on user desktop and send data to telemetry.
+      // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
+      // This is workaround to force initialize API for first time enter to
+      // ensure getStorageProviders call returns successfully.
+      await CloudStorage.getDownloadFolder();
+      let providers = await CloudStorage.getStorageProviders();
+      await this.studyUtils.telemetry({message: "Addon_init", provider_count: providers.size.toString()});
     } catch (err) {
       Cu.reportError(err);
     }
@@ -101,13 +109,23 @@ var CloudStorageView = {
                                         true);
         // Move downloads inside inprogressdownloads to provider folder
         await CloudViewInternal.handleMove();
-        await self.studyUtils.telemetry({ data: "prompt save clicked" });
+        let telemetryData = {
+          message: remember ? "prompt_opted_in" : "prompt_save_click",
+          provider: key,
+          timestamp: Math.floor(Date.now() / 1000).toString(),
+        };
+        await self.studyUtils.telemetry(telemetryData);
       },
       secondary: async function cs_secondary(aState) {
         let remember = aState && aState.checkboxChecked;
         CloudStorage.savePromptResponse(key, remember);
         CloudViewInternal.reset();
-        await self.studyUtils.telemetry({ data: "prompt cancel clicked" });
+        let telemetryData = {
+          message: remember ? "prompt_rejected" : "prompt_cancel_click",
+          provider: key,
+          timestamp: Math.floor(Date.now() / 1000).toString(),
+        };
+        await self.studyUtils.telemetry(telemetryData);
       },
     };
     this._showCloudStoragePrompt(chromeDoc, actions, options, providerName);

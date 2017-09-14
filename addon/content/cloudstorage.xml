@@ -22,7 +22,7 @@
         <xul:stack>
           <xul:image class="downloadTypeIcon"
                      validate="always"
-                     xbl:inherits="src=image,tooltiptext=displayName"/>
+                     xbl:inherits="src=image"/>
           <xul:image class="providerTypeIcon"/>
           <xul:image class="downloadBlockedBadge" />
         </xul:stack>
@@ -64,7 +64,7 @@
           <xul:stack class="downloadButtonLabels">
             <xul:description class="downloadDetails downloadShow"
                              crop="end"
-                             value="&cmd.showMac.label;"
+                             value="&cmd.show.label;"
                              />
             <xul:description class="downloadDetails downloadCancel"
                              crop="end"
@@ -84,7 +84,7 @@
                     tooltiptext="&cmd.retry.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
         <xul:button class="downloadButton downloadShow downloadIconShow"
-                    tooltiptext="&cmd.showMac.label;"
+                    tooltiptext="&cmd.show.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
         <xul:button class="downloadButton downloadConfirmBlock downloadIconCancel"
                     tooltiptext="&cmd.removeFile.label;"

@@ -62,6 +62,7 @@ async function startup(addonData, reason) {
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
   const variation = await chooseVariation();
   studyUtils.setVariation(variation);
+  Jsm.import(config.modules);
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
     studyUtils.firstSeen();  // sends telemetry "enter"
@@ -97,7 +98,7 @@ async function startup(addonData, reason) {
   await CloudStorageView.init(studyUtils, properties);
 }
 
-function shutdown() {
+function shutdown(addonData, reason) {
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
 
@@ -110,7 +111,7 @@ function shutdown() {
   }
   // Stop listening for any new browser windows to open
   wm.removeListener(WindowListener);
-  Services.obs.removeObserver(this, "cloudstorage-prompt-notification");
+  Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 
   console.log("shutdown", REASONS[reason] || reason);
   // are we uninstalling?
@@ -124,10 +125,8 @@ function shutdown() {
     }
   }
 
-  Cu.unload('resource://gre/modules/Console.jsm');
-  Cu.unload('resource://gre/modules/Log.jsm');
-  Cu.unload('resource://gre/modules/Services.jsm');
-  Cu.unload('resource://gre/modules/XPCOMUtils.jsm');
+  console.log("Jsms unloading");
+  Jsm.unload(config.modules);
 }
 
 async function observe(subject, topic, data) {
@@ -136,6 +135,7 @@ async function observe(subject, topic, data) {
   switch (topic) {
     case "cloudstorage-prompt-notification":
       console.log("notification receivced:", data);
+      await studyUtils.telemetry({ message: "download_started" });
       await CloudStorageView.handlePromptNotification(data);
       break;
   }
@@ -208,4 +208,20 @@ function initTreatments() {
 
   Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
   return propertiesURL;
+}
+
+// jsm loader / unloader
+class Jsm {
+  static import(modulesArray) {
+    for (const module of modulesArray) {
+      log.debug(`loading ${module}`);
+      Cu.import(module);
+    }
+  }
+  static unload(modulesArray) {
+    for (const module of modulesArray) {
+      log.debug(`Unloading ${module}`);
+      Cu.unload(module);
+    }
+  }
 }

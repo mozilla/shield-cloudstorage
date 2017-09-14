@@ -40,9 +40,7 @@ var config = {
     return true;
   },
   // addon-specific modules to load/unload during `startup`, `shutdown`
-  "modules": [
-    // can use ${slug} here for example
-  ],
+  "modules": [],
   // sets the logging for BOTH the bootstrap file AND shield-study-utils
   "log": {
     // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: -1,
