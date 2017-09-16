@@ -93,6 +93,13 @@ async function startup(addonData, reason) {
   // Wait for any new browser windows to open
   Services.wm.addListener(WindowListener);
 
+  // Add DownloadPrefObserver if user has previously opted-in for cloud storage downloads
+  if (Services.prefs.getCharPref("cloud.services.storage.key", "")) {
+    // Set observers to send subsequent download preferences changes to telemetry
+    Services.prefs.addObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
+    Services.prefs.addObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
+  }
+
   Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
   let properties = initTreatments();
   await CloudStorageView.init(studyUtils, properties);
@@ -111,6 +118,8 @@ function shutdown(addonData, reason) {
   }
   // Stop listening for any new browser windows to open
   wm.removeListener(WindowListener);
+  Services.prefs.removeObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
+  Services.prefs.removeObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
   Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 
   console.log("shutdown", REASONS[reason] || reason);
@@ -118,6 +127,7 @@ function shutdown(addonData, reason) {
   // if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
     console.log("uninstall or disable");
+    cleanUpPrefs();
     if (!studyUtils._isEnding) {
       // we are the first requestors, must be user action.
       console.log("user requested shutdown");
@@ -139,6 +149,16 @@ async function observe(subject, topic, data) {
       await CloudStorageView.handlePromptNotification(data);
       break;
   }
+}
+
+function cleanUpPrefs() {
+  // Ensure cloud storage study related prefs are cleared
+  const CLOUD_SERVICES_PREF = "cloud.services.";
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "lastprompt");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "rejected.key");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "api.enabled");
 }
 
 /** CONSTANTS and other bootstrap.js utilities */

@@ -45,13 +45,24 @@ var CloudStorageView = {
       this.studyUtils = studyUtils;
       this.propertiesURL = propertiesURL;
       await CloudViewInternal.init();
+
       // Get number of providers on user desktop and send data to telemetry.
       // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
       // This is workaround to force initialize API for first time enter to
       // ensure getStorageProviders call returns successfully.
       await CloudStorage.getDownloadFolder();
       let providers = await CloudStorage.getStorageProviders();
-      await this.studyUtils.telemetry({message: "Addon_init", provider_count: providers.size.toString()});
+      let keys = [];
+      if (providers.size > 0) {
+        providers.forEach((value, key) => {
+          keys.push(key);
+        });
+      }
+      await this.studyUtils.telemetry({
+        message: "addon_init",
+        provider_count: providers.size.toString(),
+        provider_keys: keys.join(","),
+      });
     } catch (err) {
       Cu.reportError(err);
     }
@@ -63,7 +74,7 @@ var CloudStorageView = {
    *
    * @param targetPath
    *        complete path of item to be downloaded
-   * @return {Promise} that resolves successfully once door hangar prompt is shwon
+   * @return {Promise} that resolves successfully once door hangar prompt is shown
    */
   async handlePromptNotification(targetPath) {
     // Check and retrive provider prompt info from CloudStorage API.
@@ -109,6 +120,13 @@ var CloudStorageView = {
                                         true);
         // Move downloads inside inprogressdownloads to provider folder
         await CloudViewInternal.handleMove();
+
+        // If opted-in, set observers to send subsequent download pref changes to telemetry
+        if (remember) {
+          Services.prefs.addObserver("browser.download.folderList", self.downloadPrefObserve);
+          Services.prefs.addObserver("browser.download.useDownloadDir", self.downloadPrefObserve);
+        }
+
         let telemetryData = {
           message: remember ? "prompt_opted_in" : "prompt_save_click",
           provider: key,
@@ -129,6 +147,21 @@ var CloudStorageView = {
       },
     };
     this._showCloudStoragePrompt(chromeDoc, actions, options, providerName);
+  },
+
+  /**
+   * In preferences UI, under Downloads, user can opt-out of cloud storage.
+   * Observes download preferences and notify telemetry if user is opted_in
+   * or opted_out of cloud storage.
+   */
+  async downloadPrefObserve(subject, topic, data) {
+    let folderListPref = Services.prefs.getIntPref("browser.download.folderList", 1);
+    let useDownloadDirPref = Services.prefs.getBoolPref("browser.download.useDownloadDir", true);
+    await CloudStorageView.studyUtils.telemetry({
+      message: "download_prefs",
+      cloud_storage_state: (folderListPref === 3 && useDownloadDirPref) ? "opted_in" : "opted_out",
+      timestamp: Math.floor(Date.now() / 1000).toString(),
+    });
   },
 
   // URI to access icon files

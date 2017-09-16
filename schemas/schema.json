@@ -1,3 +1,5 @@
+// Schema with details on telemetry data captured with cloud storage shield study
+// Shield pings are documnted in details at https://docs.google.com/document/d/1msDI3YnOg9T06b11jGPDOdM4aEO7EgJYogGEeKkhYgM/edit
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "shield-cloud-storage",
@@ -6,17 +8,24 @@
   "definitions": {
     "branch_message": {
       "type": "string",
-      "enum": ["Addon_init", "prompt_save_click", "prompt_opted_in", "prompt_cancel_click", "prompt_rejected", "download_started"]
+      "enum": ["addon_init", "download_prefs", "prompt_save_click", "prompt_opted_in",
+               "prompt_cancel_click", "prompt_rejected", "download_started"]
     },
     "provider_key": {
       "type": "string",
       "enum": ["Dropbox", "GDrive"]
     },
+    "cloud_storage_state": {
+      "type": "string",
+      "enum": ["opted_in", "opted_out"]
+    },
     "notification_instance": {
       "message": { "$ref": "#/definitions/branch_message" },
       "provider": { "$ref": "#/definitions/provider_key" },
+      "cloud_storage_state": { "$ref": "#/definitions/cloud_storage_state" },
       "timestamp": { "type": "string" },
       "provider_count": { "type": "string" },
+      "provider_keys": { "type": "string" },
     }
   }
 }
