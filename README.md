@@ -13,10 +13,9 @@ Add-on for cloud storage Fx56 shield experiment
 
 1. `about:debugging > [load temporary addon] > choose `dist/shield-cloudstorage.xpi`
 2. `tools > Web Developer > Browser Console`
-3. Open about:config and create boolean pref 'cloud.services.api.enabled' with value 'true'
-4. Open link e.g. https://www.mozilla.org/en-US/firefox/all/
-5. Click on any download link. If you see the prompt 'You have chosen to open' asking to choose between open and save file - select save file.
-6. If Cloud Storage API has never been initialized before first download initializes API and subsequent downloads shows door hangar prompt.
+3. Open link e.g. https://www.mozilla.org/en-US/firefox/all/
+4. Click on any download link. If you see the prompt 'You have chosen to open' asking to choose between open and save file - select save file.
+5. If Cloud Storage API has never been initialized before first download initializes API and subsequent downloads shows door hangar prompt.
 
 ## Results/ Effects:
 

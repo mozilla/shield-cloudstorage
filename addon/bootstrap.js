@@ -79,48 +79,19 @@ async function startup(addonData, reason) {
 
   console.log(`info ${JSON.stringify(studyUtils.info())}`);
 
-
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-
-  // Get the list of browser windows already open
-  let windows = wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
-    WindowListener.setupBrowserUI(domWindow);
+  // Continue initializing cloud storage add-on for
+  // branches other than "control"
+  // "control" group is users with default setup and no UI changes.
+  if (studyUtils.getVariation().name !== "control") {
+    initialize();
   }
-
-  // Wait for any new browser windows to open
-  Services.wm.addListener(WindowListener);
-
-  // Add DownloadPrefObserver if user has previously opted-in for cloud storage downloads
-  if (Services.prefs.getCharPref("cloud.services.storage.key", "")) {
-    // Set observers to send subsequent download preferences changes to telemetry
-    Services.prefs.addObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
-    Services.prefs.addObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
-  }
-
-  Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
-  let properties = initTreatments();
-  await CloudStorageView.init(studyUtils, properties);
 }
 
 function shutdown(addonData, reason) {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-
-  // Get the list of browser windows already open
-  let windows = wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
-
-    WindowListener.tearDownBrowserUI(domWindow);
+  // Uninitialize cloud storage add-on specific observers
+  if (studyUtils.getVariation().name !== "control") {
+    uninitialize();
   }
-  // Stop listening for any new browser windows to open
-  wm.removeListener(WindowListener);
-  Services.prefs.removeObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
-  Services.prefs.removeObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
-  Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 
   console.log("shutdown", REASONS[reason] || reason);
   // are we uninstalling?
@@ -139,9 +110,32 @@ function shutdown(addonData, reason) {
   Jsm.unload(config.modules);
 }
 
+async function initialize() {
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator);
+
+  // Get the list of browser windows already open
+  let windows = wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+    WindowListener.setupBrowserUI(domWindow);
+  }
+
+  // Wait for any new browser windows to open
+  Services.wm.addListener(WindowListener);
+
+  // Add DownloadPrefObserver if user has previously opted-in for cloud storage downloads
+  if (Services.prefs.getCharPref("cloud.services.storage.key", "")) {
+    Services.prefs.addObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
+    Services.prefs.addObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
+  }
+
+  Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
+  let properties = initTreatments();
+  await CloudStorageView.init(studyUtils, properties);
+}
+
 async function observe(subject, topic, data) {
-  // TBD: Check for variation here before handling
-  // notification
   switch (topic) {
     case "cloudstorage-prompt-notification":
       console.log("notification receivced:", data);
@@ -149,6 +143,52 @@ async function observe(subject, topic, data) {
       await CloudStorageView.handlePromptNotification(data);
       break;
   }
+}
+
+function initTreatments() {
+  let treatment = studyUtils.getVariation().name;
+  let propertiesURL = "chrome://cloud/locale/storage.properties";
+  console.log("initTreatments:", treatment);
+
+  let interval = 0; // 0 days
+  switch (treatment) {
+    case "promptInterval_None_Content_Default":
+      propertiesURL = "chrome://cloud/locale/storage.properties";
+      break;
+    case "promptInterval_None_Content_A":
+      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
+      break;
+    case "promptInterval_Content_Default":
+      interval = config.study.promptInterval;
+      propertiesURL = "chrome://cloud/locale/storage.properties";
+      break;
+    case "promptInterval_Content_A":
+      interval = config.study.promptInterval;
+      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
+      break;
+  }
+  Services.prefs.setBoolPref("cloud.services.api.enabled", true);
+  Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
+  return propertiesURL;
+}
+
+function uninitialize() {
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+           getService(Ci.nsIWindowMediator);
+
+  // Get the list of browser windows already open
+  let windows = wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+
+    WindowListener.tearDownBrowserUI(domWindow);
+  }
+  // Stop listening for any new browser windows to open
+  wm.removeListener(WindowListener);
+
+  Services.prefs.removeObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
+  Services.prefs.removeObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
+  Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 }
 
 function cleanUpPrefs() {
@@ -201,33 +241,6 @@ async function chooseVariation() {
   }
   log.debug(`variation: ${toSet} source:${source}`);
   return toSet;
-}
-
-function initTreatments() {
-  let treatment = studyUtils.getVariation().name;
-  let propertiesURL = "chrome://cloud/locale/storage.properties";
-  console.log("initTreatments:", treatment);
-
-  let interval = 0; // 0 days
-  switch (treatment) {
-    case "promptInterval_None_Content_Default":
-      propertiesURL = "chrome://cloud/locale/storage.properties";
-      break;
-    case "promptInterval_None_Content_A":
-      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
-      break;
-    case "promptInterval_Content_Default":
-      interval = config.study.promptInterval;
-      propertiesURL = "chrome://cloud/locale/storage.properties";
-      break;
-    case "promptInterval_Content_A":
-      interval = config.study.promptInterval;
-      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
-      break;
-  }
-
-  Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
-  return propertiesURL;
 }
 
 // jsm loader / unloader

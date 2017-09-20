@@ -1,5 +1,5 @@
 // Schema with details on telemetry data captured with cloud storage shield study
-// Shield pings are documnted in details at https://docs.google.com/document/d/1msDI3YnOg9T06b11jGPDOdM4aEO7EgJYogGEeKkhYgM/edit
+// Shield pings are documented in details at https://docs.google.com/document/d/1msDI3YnOg9T06b11jGPDOdM4aEO7EgJYogGEeKkhYgM/edit
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "shield-cloud-storage",
