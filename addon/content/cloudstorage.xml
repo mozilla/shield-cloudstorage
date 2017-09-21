@@ -115,6 +115,18 @@
         // Read the src path from download type icon
         // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
         // and use it to highlight respective downloaded item with storage provider icon
+        // Pre-processor directive check for XP_MACOSX in download.xml
+        // https://dxr.mozilla.org/mozilla-central/source/browser/components/downloads/content/download.xml#67
+        // is causing error while overiding binding. Handle download item show label and tooltip text
+        // shown in Mac in download panel and download history for en-US
+
+        if (navigator.userAgent.toLowerCase().indexOf("mac") >= 0) {
+          let dwnldBtnShow= document.getAnonymousElementByAttribute(this, "class", "downloadDetails downloadShow");
+          dwnldBtnShow.value = "Show In Finder";
+
+          let dwnldBtnArea= document.getAnonymousElementByAttribute(this, "class", "downloadButton downloadShow downloadIconShow");
+          dwnldBtnArea.value = "Show In Finder";
+        }
 
         let providerElem = document.getAnonymousElementByAttribute(this, "class", "providerTypeIcon");
         let providers = ["dropbox", "google drive"];

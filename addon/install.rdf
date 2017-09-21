@@ -6,6 +6,7 @@
         <em:name>Cloud Storage Add-on</em:name>
         <em:version>1.0</em:version>
         <em:bootstrap>true</em:bootstrap>
+        <em:multiprocessCompatible>true</em:multiprocessCompatible>
         <em:creator>Punam Dahiya &lt;pdahiya@mozilla.com&gt;</em:creator>
         <em:targetApplication>
             <Description>
