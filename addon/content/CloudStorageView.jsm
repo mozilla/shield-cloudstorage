@@ -27,23 +27,32 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+                                  "resource://gre/modules/Timer.jsm");
 /**
  * The external API exported by this module.
  */
 var CloudStorageView = {
-  studyUtils: null,
-  propertiesURL: null,
+  studyUtils: null,                // Reference to shield StudyUtils.jsm
+  propertiesURI: null,             // Stores URI to properties files defining UI strings
+  doorHangerNotificiation: null,   // Cloud storage door-hanger prompt notification
+  isNotificationPersistent: false, // Property to store if door-hanger prompt is of type persistent
+  notificationTransientTime: null, // Transient time in ms after which prompt is removed
+
   /**
     * Init method to initialize cloud storage view and studyUtils property
     */
-  async init(studyUtils, propertiesURL) {
+  async init(studyUtils, propertiesURI, isPersistent, transientTime) {
     try {
       if (!studyUtils) {
         Cu.reportError("CloudStorageView: Failed to initialize studyUtils");
         return;
       }
       this.studyUtils = studyUtils;
-      this.propertiesURL = propertiesURL;
+      this.propertiesURI = propertiesURI;
+      this.isNotificationPersistent = isPersistent;
+      this.notificationTransientTime = transientTime;
+
       await CloudViewInternal.init();
 
       // Get number of providers on user desktop and send data to telemetry.
@@ -70,20 +79,19 @@ var CloudStorageView = {
 
   /**
    * Handles 'cloudstorage-prompt-notification' by scanning client desktop
-   * and displaying provider prompt for a existing cloud provider user.
+   * and displaying provider prompt for an existing cloud provider user.
    *
    * @param targetPath
    *        complete path of item to be downloaded
    * @return {Promise} that resolves successfully once door hangar prompt is shown
    */
   async handlePromptNotification(targetPath) {
-    // Check and retrive provider prompt info from CloudStorage API.
-    // Prompt existing providre users to opt-in
-    // to save files directly to provider download folder
+    // Check and retrieve provider prompt info from CloudStorage API.
+    // Prompt existing cloud provider users to opt-in by
+    // saving files directly to provider download folder
 
     let provider = await CloudStorage.promisePromptInfo();
     if (provider) {
-      CloudViewInternal.promptVisible = true;
       CloudViewInternal.prefCloudProvider = provider;
       if (!CloudViewInternal.inProgressDownloads.has(targetPath)) {
         CloudViewInternal.inProgressDownloads.set(targetPath, {});
@@ -92,6 +100,8 @@ var CloudStorageView = {
       let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
         getService(Ci.nsIWindowMediator);
       await this._promptForSaveToCloudStorage(wm.getMostRecentWindow("navigator:browser"), provider);
+
+      CloudViewInternal.promptVisible = true;
     }
 
     // Handle subsequent downloads started when prompt is still visible
@@ -101,15 +111,49 @@ var CloudStorageView = {
     }
   },
 
+  /**
+   * In preferences UI, under Downloads, user can opt-out of cloud storage.
+   * Observe download preferences and notify telemetry if user is 'opted_in'
+   * or 'opted_out' of cloud storage.
+   */
+  async downloadPrefObserve(subject, topic, data) {
+    let folderListPref = Services.prefs.getIntPref("browser.download.folderList", 1);
+    let useDownloadDirPref = Services.prefs.getBoolPref("browser.download.useDownloadDir", true);
+    await CloudStorageView.studyUtils.telemetry({
+      message: "download_prefs",
+      cloud_storage_state: (folderListPref === 3 && useDownloadDirPref) ? "opted_in" : "opted_out",
+      timestamp: Math.floor(Date.now() / 1000).toString(),
+    });
+  },
+
+  // URI to access icon files
+  _getIconURI(name) {
+    let path = "chrome://cloud/skin/" + name.toLowerCase() + "_18x18.png";
+    return path;
+  },
+
   async _promptForSaveToCloudStorage(chromeDoc, provider) {
-    let key = provider.key;
+    let self = this;
     let providerName = provider.value.displayName;
+
     let options = {
-      persistent: true,
+      persistent: this.isNotificationPersistent,
       popupIconURL: this._getIconURI(providerName),
+      closeButtonFunc: () => {
+        self._removeNotification();
+      },
+      eventCallback: eventName => {
+        switch (eventName) {
+          case "dismissed":
+            if (!self.doorHangerNotificiation.options.persistent) {
+              self._removeNotification();
+            }
+            break;
+        }
+      },
     };
 
-    let self = this;
+    let key = provider.key;
     let actions = {
       main: async function cs_main(aState) {
         let remember = aState && aState.checkboxChecked;
@@ -146,34 +190,15 @@ var CloudStorageView = {
         await self.studyUtils.telemetry(telemetryData);
       },
     };
-    this._showCloudStoragePrompt(chromeDoc, actions, options, providerName);
+    this._showNotification(chromeDoc, actions, options, providerName);
   },
 
-  /**
-   * In preferences UI, under Downloads, user can opt-out of cloud storage.
-   * Observes download preferences and notify telemetry if user is opted_in
-   * or opted_out of cloud storage.
-   */
-  async downloadPrefObserve(subject, topic, data) {
-    let folderListPref = Services.prefs.getIntPref("browser.download.folderList", 1);
-    let useDownloadDirPref = Services.prefs.getBoolPref("browser.download.useDownloadDir", true);
-    await CloudStorageView.studyUtils.telemetry({
-      message: "download_prefs",
-      cloud_storage_state: (folderListPref === 3 && useDownloadDirPref) ? "opted_in" : "opted_out",
-      timestamp: Math.floor(Date.now() / 1000).toString(),
-    });
-  },
+  _showNotification(chromeDoc, actions, options, name) {
+    let downloadBundle = Services.strings.createBundle(this.propertiesURI);
+    let msgString = CloudViewInternal.inProgressDownloads.size > 1 ?
+      "cloud.service.multi.save.description" : "cloud.service.save.description";
 
-  // URI to access icon files
-  _getIconURI(name) {
-    let path = "chrome://cloud/skin/" + name.toLowerCase() + "_18x18.png";
-    return path;
-  },
-
-  _showCloudStoragePrompt(chromeDoc, actions, options, name) {
-    let downloadBundle = Services.strings.createBundle(this.propertiesURL);
-    let message = downloadBundle.formatStringFromName("cloud.service.save.description",
-                                                     [name], 1);
+    let message = downloadBundle.formatStringFromName(msgString, [name], 1);
     let main_action = {
       label: downloadBundle.formatStringFromName("cloud.service.saveCloud.label",
                                                      [name], 1),
@@ -192,10 +217,25 @@ var CloudStorageView = {
       label: downloadBundle.GetStringFromName("cloud.service.save.remember"),
     };
 
-    let notificationid = "cloudServicesInstall";
-    chromeDoc.PopupNotifications.show(chromeDoc.gBrowser.selectedBrowser,
-                                        notificationid, message, null,
-                                        main_action, secondary_action, options);
+    let notificationid = "cloudStoragePrompt";
+    this.doorHangerNotificiation = chromeDoc.PopupNotifications.show(
+      chromeDoc.gBrowser.selectedBrowser,
+      notificationid, message, null,
+      main_action, secondary_action, options);
+
+    // If notification has transientTime defined
+    // Wait until after the delay to dismiss the prompt
+    let self = this;
+    if (self.notificationTransientTime) {
+      setTimeout(function dismissal() {
+        CloudStorageView._removeNotification();
+      }, self.notificationTransientTime);
+    }
+  },
+
+  _removeNotification() {
+    CloudStorageView.doorHangerNotificiation.remove();
+    CloudViewInternal.reset();
   },
 };
 
@@ -208,7 +248,7 @@ var CloudViewInternal = {
   prefCloudProvider: null,
 
   /**
-   * Internal property that stores downloads started once
+   * Internal property that stores downloads started, once
    * provider prompt is shown and is waiting for user action.
    * Downloads are stored in key value pair with 'key' as download target path
    * and 'value' as 'Download' object respresenting a single download
@@ -227,6 +267,12 @@ var CloudViewInternal = {
   async init() {
     let list = await Downloads.getList(Downloads.ALL);
     let view = {
+      onDownloadAdded: download => {
+        if (this.promptVisible && this.inProgressDownloads && this.inProgressDownloads.size === 2) {
+          // Should reshow prompt once to update message when inProgressDownloads reaches 2
+          CloudStorageView.doorHangerNotificiation.reshow();
+        }
+      },
       onDownloadChanged: async download => {
         if (this.promptVisible && this.inProgressDownloads.has(download.target.path)) {
           this.inProgressDownloads.set(download.target.path, download);

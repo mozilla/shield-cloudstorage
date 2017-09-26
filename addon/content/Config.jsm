@@ -13,10 +13,12 @@ var config = {
     "studyName": "cloud-storage-study", // no spaces, for all the reasons
     "weightedVariations": [
       { name: "control", "weight": 1 },
-      { name: "promptInterval_None_Content_Default", "weight": 1 },
-      { name: "promptInterval_None_Content_A", "weight": 1 },
-      { name: "promptInterval_Content_Default", "weight": 1 },
-      { name: "promptInterval_Content_A", "weight": 1 },
+      { name: "prompt_persistent", "weight": 1 },
+      { name: "prompt_not_persistent", "weight": 1 },
+      { name: "prompt_transient", "weight": 1 },
+      { name: "prompt_persistent_with_interval", "weight": 1 },
+      { name: "prompt_not_persistent_with_interval", "weight": 1 },
+      { name: "prompt_transient_with_interval", "weight": 1 },
     ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
@@ -32,7 +34,8 @@ var config = {
       // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
-    "promptInterval": 0.0001, // in days (~ 2 mins) 
+    "promptInterval": 0.0001, // in days (~ 2 mins)
+    "promptTransientTime": 30000,    // in ms (30 seconds)
   },
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!

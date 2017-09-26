@@ -110,7 +110,7 @@ function shutdown(addonData, reason) {
   Jsm.unload(config.modules);
 }
 
-async function initialize() {
+function initialize() {
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
 
@@ -131,8 +131,7 @@ async function initialize() {
   }
 
   Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
-  let properties = initTreatments();
-  await CloudStorageView.init(studyUtils, properties);
+  initTreatments();
 }
 
 async function observe(subject, topic, data) {
@@ -145,31 +144,50 @@ async function observe(subject, topic, data) {
   }
 }
 
-function initTreatments() {
+async function initTreatments() {
   let treatment = studyUtils.getVariation().name;
   let propertiesURL = "chrome://cloud/locale/storage.properties";
+  let isNotificationPersistent = false;
+  let notificationTransientTime = null;
+  let interval = 0; // 0 days
   console.log("initTreatments:", treatment);
 
-  let interval = 0; // 0 days
   switch (treatment) {
-    case "promptInterval_None_Content_Default":
-      propertiesURL = "chrome://cloud/locale/storage.properties";
+    case "prompt_persistent":
+      // Fully persistent prompt, can be removed after explicitly
+      // closing the prompt or when user accepts or rejects the request
+      isNotificationPersistent = true;
       break;
-    case "promptInterval_None_Content_A":
-      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
+    case "prompt_not_persistent":
+      // Non persistent prompt, disappear on click outside
       break;
-    case "promptInterval_Content_Default":
+    case "prompt_transient":
+      // Transient prompt, removes itself after promptTransientTime
+      isNotificationPersistent = true;
+      notificationTransientTime = config.study.promptTransientTime;
+      break;
+    case "prompt_persistent_with_interval":
+      // Treatment uses persistent prompt. When dismissed shows next
+      // prompt after promptInterval (specified in days inside config.jsm)
       interval = config.study.promptInterval;
-      propertiesURL = "chrome://cloud/locale/storage.properties";
+      isNotificationPersistent = true;
       break;
-    case "promptInterval_Content_A":
+    case "prompt_not_persistent_with_interval":
+      // Treatment uses non-persistent prompt. When dismissed shows next
+      // prompt after promptInterval (specified in days)
       interval = config.study.promptInterval;
-      propertiesURL = "chrome://cloud/locale/storage-var-a.properties";
+      break;
+    case "prompt_transient_with_interval":
+      // Treatment uses transient prompt. When dismissed shows next
+      // prompt after promptInterval (specified in days)
+      interval = config.study.promptInterval;
+      isNotificationPersistent = true;
+      notificationTransientTime = config.study.promptTransientTime;
       break;
   }
   Services.prefs.setBoolPref("cloud.services.api.enabled", true);
   Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
-  return propertiesURL;
+  await CloudStorageView.init(studyUtils, propertiesURL, isNotificationPersistent, notificationTransientTime);
 }
 
 function uninitialize() {
