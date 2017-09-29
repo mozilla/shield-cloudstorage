@@ -58,11 +58,13 @@ async function startup(addonData, reason) {
   log.debug("startup", REASONS[reason] || reason);
 
   studyUtils.setup({
-    studyName: studyConfig.studyName,
-    endings: studyConfig.endings,
-    addon: {id: addonData.id, version: addonData.version},
-    telemetry: studyConfig.telemetry,
+    study: {
+      studyName: studyConfig.studyName,
+      endings: studyConfig.endings,
+      telemetry: studyConfig.telemetry,
+    },
     log: config.log,
+    addon: {id: addonData.id, version: addonData.version},
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
   const variation = await chooseVariation();
