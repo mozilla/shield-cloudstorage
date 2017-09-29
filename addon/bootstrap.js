@@ -1,22 +1,27 @@
 "use strict";
 
+
+/* global  __SCRIPT_URI_SPEC__  */
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "(startup|shutdown|install|uninstall)" }]*/
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Console.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "config",
-  "chrome://cloud/content/Config.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CloudStorageView",
   "chrome://cloud/content/CloudStorageView.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "studyUtils",
-  "chrome://cloud/content/StudyUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
-var log = {};
+/* Shield */
+const CONFIGPATH = `${__SCRIPT_URI_SPEC__}/../Config.jsm`;
+const { config } = Cu.import(CONFIGPATH, {});
+const studyConfig = config.study;
+Cu.import("resource://gre/modules/Console.jsm");
+const log = createLog(studyConfig.studyName, config.log.bootstrap.level);  // defined below.
+
+const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
+const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
+
 var WindowListener = {
   setupBrowserUI: function wm_setupBrowserUI(window) {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -50,14 +55,14 @@ function uninstall() {}
 
 async function startup(addonData, reason) {
   // addonData: Array [ "id", "version", "installPath", "resourceURI", "instanceID", "webExtension" ]  bootstrap.js:48
-  log = createLog(config.study.studyName, config.log.bootstrap.level);  // defined below.
   log.debug("startup", REASONS[reason] || reason);
 
   studyUtils.setup({
-    studyName: config.study.studyName,
-    endings: config.study.endings,
+    studyName: studyConfig.studyName,
+    endings: studyConfig.endings,
     addon: {id: addonData.id, version: addonData.version},
-    telemetry: config.study.telemetry,
+    telemetry: studyConfig.telemetry,
+    log: config.log,
   });
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
   const variation = await chooseVariation();
@@ -164,25 +169,25 @@ async function initTreatments() {
     case "prompt_transient":
       // Transient prompt, removes itself after promptTransientTime
       isNotificationPersistent = true;
-      notificationTransientTime = config.study.promptTransientTime;
+      notificationTransientTime = studyConfig.promptTransientTime;
       break;
     case "prompt_persistent_with_interval":
       // Treatment uses persistent prompt. When dismissed shows next
       // prompt after promptInterval (specified in days inside config.jsm)
-      interval = config.study.promptInterval;
+      interval = studyConfig.promptInterval;
       isNotificationPersistent = true;
       break;
     case "prompt_not_persistent_with_interval":
       // Treatment uses non-persistent prompt. When dismissed shows next
       // prompt after promptInterval (specified in days)
-      interval = config.study.promptInterval;
+      interval = studyConfig.promptInterval;
       break;
     case "prompt_transient_with_interval":
       // Treatment uses transient prompt. When dismissed shows next
       // prompt after promptInterval (specified in days)
-      interval = config.study.promptInterval;
+      interval = studyConfig.promptInterval;
       isNotificationPersistent = true;
-      notificationTransientTime = config.study.promptTransientTime;
+      notificationTransientTime = studyConfig.promptTransientTime;
       break;
   }
   Services.prefs.setBoolPref("cloud.services.api.enabled", true);
@@ -236,6 +241,7 @@ for (const r in REASONS) { REASONS[REASONS[r]] = r; }
 
 // logging
 function createLog(name, levelWord) {
+  Cu.import("resource://gre/modules/Log.jsm");
   var L = Log.repository.getLogger(name);
   L.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
   L.level = Log.Level[levelWord] || Log.Level.Debug; // should be a config / pref
@@ -245,8 +251,6 @@ function createLog(name, levelWord) {
 async function chooseVariation() {
   let toSet, source;
   const sample = studyUtils.sample;
-  const studyConfig = config.study;
-
   if (studyConfig.variation) {
     source = "startup-config";
     toSet = studyConfig.variation;
