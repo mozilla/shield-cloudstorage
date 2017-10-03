@@ -1,0 +1,18 @@
+richlistitem[type="download"] {
+	-moz-binding: url("chrome://cloud/content/cloudstorage.xml#cloud-storage") !important;
+}
+
+
+richlistitem.download[active] {
+  -moz-binding: url("chrome://cloud/content/cloudstorage.xml#cloud-storage") !important;
+}
+
+.dropbox {
+	margin: 20px 5px 0px;
+  background: url("chrome://cloud-shared/skin/dropbox.svg") top right / 16px no-repeat;
+}
+
+.googledrive{
+	margin: 20px 5px 0px;
+	background: url("chrome://cloud-shared/skin/googledrive.svg") top right / 16px no-repeat;
+}

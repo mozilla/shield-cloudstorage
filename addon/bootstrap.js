@@ -25,12 +25,12 @@ const { studyUtils } = Cu.import(STUDYUTILSPATH, {});
 var WindowListener = {
   setupBrowserUI: function wm_setupBrowserUI(window) {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    utils.loadSheetUsingURIString("chrome://cloud/content/binding.css", Ci.nsIDOMWindowUtils.AGENT_SHEET);
+    utils.loadSheetUsingURIString("chrome://cloud-shared/skin/cloudstorage.css", Ci.nsIDOMWindowUtils.AGENT_SHEET);
   },
 
   tearDownBrowserUI: function wm_tearDownBrowserUI(window) {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    utils.removeSheetUsingURIString("chrome://cloud/content/binding.css", Ci.nsIDOMWindowUtils.AGENT_SHEET);
+    utils.removeSheetUsingURIString("chrome://cloud-shared/skin/cloudstorage.css", Ci.nsIDOMWindowUtils.AGENT_SHEET);
   },
 
   // nsIWindowMediatorListener functions
@@ -118,11 +118,8 @@ function shutdown(addonData, reason) {
 }
 
 function initialize() {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-
   // Get the list of browser windows already open
-  let windows = wm.getEnumerator("navigator:browser");
+  let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
     WindowListener.setupBrowserUI(domWindow);
@@ -198,18 +195,15 @@ async function initTreatments() {
 }
 
 function uninitialize() {
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-
   // Get the list of browser windows already open
-  let windows = wm.getEnumerator("navigator:browser");
+  let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
 
     WindowListener.tearDownBrowserUI(domWindow);
   }
   // Stop listening for any new browser windows to open
-  wm.removeListener(WindowListener);
+  Services.wm.removeListener(WindowListener);
 
   Services.prefs.removeObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
   Services.prefs.removeObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);

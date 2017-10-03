@@ -4,9 +4,7 @@
 
 "use strict";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = [ "CloudStorageView" ];
 
@@ -35,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 var CloudStorageView = {
   studyUtils: null,                // Reference to shield StudyUtils.jsm
   propertiesURI: null,             // Stores URI to properties files defining UI strings
-  doorHangerNotificiation: null,   // Cloud storage door-hanger prompt notification
+  doorHangerNotification: null,   // Cloud storage door-hanger prompt notification
   isNotificationPersistent: false, // Property to store if door-hanger prompt is of type persistent
   notificationTransientTime: null, // Transient time in ms after which prompt is removed
 
@@ -97,9 +95,7 @@ var CloudStorageView = {
         CloudViewInternal.inProgressDownloads.set(targetPath, {});
       }
 
-      let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-        getService(Ci.nsIWindowMediator);
-      await this._promptForSaveToCloudStorage(wm.getMostRecentWindow("navigator:browser"), provider);
+      await this._promptForSaveToCloudStorage(Services.wm.getMostRecentWindow("navigator:browser"), provider);
 
       CloudViewInternal.promptVisible = true;
     }
@@ -128,7 +124,7 @@ var CloudStorageView = {
 
   // URI to access icon files
   _getIconURI(name) {
-    let path = "chrome://cloud/skin/" + name.toLowerCase() + "_18x18.png";
+    let path = "chrome://cloud-shared/skin/" + name.replace(/\s+/g, '').toLowerCase() + ".svg";
     return path;
   },
 
@@ -145,7 +141,7 @@ var CloudStorageView = {
       eventCallback: eventName => {
         switch (eventName) {
           case "dismissed":
-            if (!self.doorHangerNotificiation.options.persistent) {
+            if (!self.doorHangerNotification.options.persistent) {
               self._removeNotification();
             }
             break;
@@ -218,7 +214,7 @@ var CloudStorageView = {
     };
 
     let notificationid = "cloudStoragePrompt";
-    this.doorHangerNotificiation = chromeDoc.PopupNotifications.show(
+    this.doorHangerNotification = chromeDoc.PopupNotifications.show(
       chromeDoc.gBrowser.selectedBrowser,
       notificationid, message, null,
       main_action, secondary_action, options);
@@ -234,7 +230,7 @@ var CloudStorageView = {
   },
 
   _removeNotification() {
-    CloudStorageView.doorHangerNotificiation.remove();
+    CloudStorageView.doorHangerNotification.remove();
     CloudViewInternal.reset();
   },
 };
@@ -265,12 +261,13 @@ var CloudViewInternal = {
    *
    */
   async init() {
-    let list = await Downloads.getList(Downloads.ALL);
+    const MULTIPLE_DOWNLOADS_MESSAGE_COUNT = 2;
     let view = {
       onDownloadAdded: download => {
-        if (this.promptVisible && this.inProgressDownloads && this.inProgressDownloads.size === 2) {
+        if (this.promptVisible && this.inProgressDownloads &&
+            this.inProgressDownloads.size === MULTIPLE_DOWNLOADS_MESSAGE_COUNT) {
           // Should reshow prompt once to update message when inProgressDownloads reaches 2
-          CloudStorageView.doorHangerNotificiation.reshow();
+          CloudStorageView.doorHangerNotification.reshow();
         }
       },
       onDownloadChanged: async download => {
@@ -289,6 +286,8 @@ var CloudViewInternal = {
         }
       },
     };
+
+    let list = await Downloads.getList(Downloads.ALL);
     await list.addView(view);
   },
 

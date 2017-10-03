@@ -4,6 +4,4 @@
 
 content cloud content/
 locale cloud en-US locale/en-US/
-skin cloud classic/1.0 skin/linux/
-skin cloud classic/1.0 skin/osx/ os=Darwin
-skin cloud classic/1.0 skin/windows/ os=WINNT
+skin cloud-shared classic/1.0 skin/shared/
