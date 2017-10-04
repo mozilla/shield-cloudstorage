@@ -33,9 +33,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 var CloudStorageView = {
   studyUtils: null,                // Reference to shield StudyUtils.jsm
   propertiesURI: null,             // Stores URI to properties files defining UI strings
-  doorHangerNotification: null,   // Cloud storage door-hanger prompt notification
+  doorHangerNotification: null,    // Cloud storage door-hanger prompt notification
   isNotificationPersistent: false, // Property to store if door-hanger prompt is of type persistent
   notificationTransientTime: null, // Transient time in ms after which prompt is removed
+  defaultIconBox: null,            // Reference to container element of notification accessible using iconBox property
+                                   // By default global PopupNotifications object uses the notification-popup-box element
 
   /**
     * Init method to initialize cloud storage view and studyUtils property
@@ -84,10 +86,18 @@ var CloudStorageView = {
    * @return {Promise} that resolves successfully once door hangar prompt is shown
    */
   async handlePromptNotification(targetPath) {
+    let chromeDoc = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!chromeDoc.PopupNotifications) {
+      return;
+    }
+
+    // Capture global PopupNotifications object iconBox value before
+    // changing it to point to parent element of downloads-button
+    this.defaultIconBox = chromeDoc.PopupNotifications.iconBox;
+
     // Check and retrieve provider prompt info from CloudStorage API.
     // Prompt existing cloud provider users to opt-in by
     // saving files directly to provider download folder
-
     let provider = await CloudStorage.promisePromptInfo();
     if (provider) {
       CloudViewInternal.prefCloudProvider = provider;
@@ -95,9 +105,19 @@ var CloudStorageView = {
         CloudViewInternal.inProgressDownloads.set(targetPath, {});
       }
 
-      await this._promptForSaveToCloudStorage(Services.wm.getMostRecentWindow("navigator:browser"), provider);
+      await this._promptForSaveToCloudStorage(chromeDoc, provider);
 
       CloudViewInternal.promptVisible = true;
+    }
+
+    // Handle hiding cloud storage prompt if downloads panel is open
+    let panel = chromeDoc.document.getElementById("downloadsPanel");
+    if (panel) {
+      panel.addEventListener("popupshown", function() {
+        if (CloudViewInternal.promptVisible) {
+          CloudStorageView._removeNotification();
+        }
+      }, {once: true});
     }
 
     // Handle subsequent downloads started when prompt is still visible
@@ -124,7 +144,7 @@ var CloudStorageView = {
 
   // URI to access icon files
   _getIconURI(name) {
-    let path = "chrome://cloud-shared/skin/" + name.replace(/\s+/g, '').toLowerCase() + ".svg";
+    let path = "chrome://cloud-shared/skin/" + name.replace(/\s+/g, "").toLowerCase() + ".svg";
     return path;
   },
 
@@ -143,6 +163,15 @@ var CloudStorageView = {
           case "dismissed":
             if (!self.doorHangerNotification.options.persistent) {
               self._removeNotification();
+            }
+            break;
+          case "showing":
+            // Hide cloud storage prompt if its arrow is not pointing to downloads button
+            if (self.doorHangerNotification &&
+                self.doorHangerNotification.owner.iconBox === this.defaultIconBox) {
+              setTimeout(function dismissal() {
+                CloudStorageView._removeNotification();
+              }, 0);
             }
             break;
         }
@@ -213,11 +242,19 @@ var CloudStorageView = {
       label: downloadBundle.GetStringFromName("cloud.service.save.remember"),
     };
 
+    // Update the global PopupNotifications object iconBox to parent of
+    // downloads button in nav bar
+    chromeDoc.PopupNotifications.iconBox =
+      chromeDoc.document.getElementById("nav-bar-customization-target");
+
     let notificationid = "cloudStoragePrompt";
     this.doorHangerNotification = chromeDoc.PopupNotifications.show(
       chromeDoc.gBrowser.selectedBrowser,
-      notificationid, message, null,
+      notificationid, message, "downloads-button",
       main_action, secondary_action, options);
+
+    // Reset iconBox property back to default value stored in defaultIconBox
+    chromeDoc.PopupNotifications.iconBox = this.defaultIconBox;
 
     // If notification has transientTime defined
     // Wait until after the delay to dismiss the prompt
@@ -261,15 +298,7 @@ var CloudViewInternal = {
    *
    */
   async init() {
-    const MULTIPLE_DOWNLOADS_MESSAGE_COUNT = 2;
     let view = {
-      onDownloadAdded: download => {
-        if (this.promptVisible && this.inProgressDownloads &&
-            this.inProgressDownloads.size === MULTIPLE_DOWNLOADS_MESSAGE_COUNT) {
-          // Should reshow prompt once to update message when inProgressDownloads reaches 2
-          CloudStorageView.doorHangerNotification.reshow();
-        }
-      },
       onDownloadChanged: async download => {
         if (this.promptVisible && this.inProgressDownloads.has(download.target.path)) {
           this.inProgressDownloads.set(download.target.path, download);
