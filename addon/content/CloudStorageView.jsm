@@ -34,6 +34,7 @@ var CloudStorageView = {
   studyUtils: null,                // Reference to shield StudyUtils.jsm
   propertiesURI: null,             // Stores URI to properties files defining UI strings
   doorHangerNotification: null,    // Cloud storage door-hanger prompt notification
+  isCloseHidden: true,             // Property to store if door-hanger prompt close button is shown
   isNotificationPersistent: false, // Property to store if door-hanger prompt is of type persistent
   notificationTransientTime: null, // Transient time in ms after which prompt is removed
   defaultIconBox: null,            // Reference to container element of notification accessible using iconBox property
@@ -42,7 +43,7 @@ var CloudStorageView = {
   /**
     * Init method to initialize cloud storage view and studyUtils property
     */
-  async init(studyUtils, propertiesURI, isPersistent, transientTime) {
+  async init(studyUtils, propertiesURI, isHidden, isPersistent, transientTime) {
     try {
       if (!studyUtils) {
         Cu.reportError("CloudStorageView: Failed to initialize studyUtils");
@@ -50,6 +51,7 @@ var CloudStorageView = {
       }
       this.studyUtils = studyUtils;
       this.propertiesURI = propertiesURI;
+      this.isCloseHidden = isHidden;
       this.isNotificationPersistent = isPersistent;
       this.notificationTransientTime = transientTime;
 
@@ -91,23 +93,41 @@ var CloudStorageView = {
       return;
     }
 
-    // Capture global PopupNotifications object iconBox value before
-    // changing it to point to parent element of downloads-button
-    this.defaultIconBox = chromeDoc.PopupNotifications.iconBox;
-
     // Check and retrieve provider prompt info from CloudStorage API.
     // Prompt existing cloud provider users to opt-in by
     // saving files directly to provider download folder
     let provider = await CloudStorage.promisePromptInfo();
     if (provider) {
+      // Add-on doesn't support Google Drive custom download paths. Exit without
+      // prompting if user has Google Drive Download folder set to folder
+      // different from <HOME>/Google Drive
+      if (provider.key === "GDrive" &&
+          !await CloudViewInternal.checkIfAssetExists(provider.value.downloadPath)) {
+        await this.studyUtils.telemetry({ message: "gdrive_custom_path" });
+        return;
+      }
+
+      // Capture global PopupNotifications object iconBox value before
+      // changing it to point to parent element of downloads-button
+      this.defaultIconBox = chromeDoc.PopupNotifications.iconBox;
+
       CloudViewInternal.prefCloudProvider = provider;
       if (!CloudViewInternal.inProgressDownloads.has(targetPath)) {
         CloudViewInternal.inProgressDownloads.set(targetPath, {});
       }
 
       await this._promptForSaveToCloudStorage(chromeDoc, provider);
-
       CloudViewInternal.promptVisible = true;
+
+      let panelNotification = chromeDoc.document.getElementById("notification-popup");
+      await this.studyUtils.telemetry({
+        message: "prompt_alignment",
+        window_width: chromeDoc.innerWidth.toString(),
+        window_height: chromeDoc.innerHeight.toString(),
+        isPromptOut: (panelNotification &&
+                      panelNotification.getAttribute("popupid") === "cloudStoragePrompt" &&
+                      panelNotification.getAttribute("arrowposition") === "after_start") ? "true" : "false",
+      });
     }
 
     // Handle hiding cloud storage prompt if downloads panel is open
@@ -115,7 +135,7 @@ var CloudStorageView = {
     if (panel) {
       panel.addEventListener("popupshown", function() {
         if (CloudViewInternal.promptVisible) {
-          CloudStorageView._removeNotification();
+          CloudStorageView._removeNotification(true);
         }
       }, {once: true});
     }
@@ -155,14 +175,15 @@ var CloudStorageView = {
     let options = {
       persistent: this.isNotificationPersistent,
       popupIconURL: this._getIconURI(providerName),
+      hideClose: this.isCloseHidden,
       closeButtonFunc: () => {
-        self._removeNotification();
+        self._removeNotification(true);
       },
       eventCallback: eventName => {
         switch (eventName) {
           case "dismissed":
             if (!self.doorHangerNotification.options.persistent) {
-              self._removeNotification();
+              self._removeNotification(true);
             }
             break;
           case "showing":
@@ -170,7 +191,7 @@ var CloudStorageView = {
             if (self.doorHangerNotification &&
                 self.doorHangerNotification.owner.iconBox === this.defaultIconBox) {
               setTimeout(function dismissal() {
-                CloudStorageView._removeNotification();
+                CloudStorageView._removeNotification(true);
               }, 0);
             }
             break;
@@ -261,14 +282,18 @@ var CloudStorageView = {
     let self = this;
     if (self.notificationTransientTime) {
       setTimeout(function dismissal() {
-        CloudStorageView._removeNotification();
+        CloudStorageView._removeNotification(true);
       }, self.notificationTransientTime);
     }
   },
 
-  _removeNotification() {
+  _removeNotification(isLastPromptUpdate = false) {
     CloudStorageView.doorHangerNotification.remove();
     CloudViewInternal.reset();
+    // CloudStorage API savePromptResponse call with provider key value
+    // as null and remember value as 'false', returns after setting
+    // pref cloud.services.lastprompt
+    isLastPromptUpdate ? CloudStorage.savePromptResponse(null, false) : null;
   },
 };
 
@@ -305,7 +330,7 @@ var CloudViewInternal = {
           // No action, as prompt is visible and we are still waiting for user response
         } else if (!this.promptVisible &&
                    this.inProgressDownloads.has(download.target.path) &&
-                   download.succeeded && this._checkIfAssetExists(download.target.path)) {
+                   download.succeeded && await this.checkIfAssetExists(download.target.path)) {
           // Move downloaded item if prompt is not visible and download is a valid inProgreeDownloads item
           // that has succeded and file at target path still exists.
           // We explicitly check again if target path exists to handle scenarios when download completes
@@ -327,7 +352,7 @@ var CloudViewInternal = {
    * @resolves
    * boolean value of file existence check
    */
-  _checkIfAssetExists(path) {
+  checkIfAssetExists(path) {
     return OS.File.exists(path).catch(err => {
       Cu.reportError(`Couldn't check existance of ${path}`, err);
       return false;

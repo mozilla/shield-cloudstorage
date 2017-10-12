@@ -11,6 +11,9 @@ var EXPORTED_SYMBOLS = ["config"];
 var config = {
   "study": {
     "studyName": "cloud-storage-study", // no spaces, for all the reasons
+    "variation": {
+      "name": "prompt_persistent"
+    },
     "weightedVariations": [
       { name: "control", "weight": 1 },
       { name: "prompt_persistent", "weight": 1 },
@@ -19,6 +22,8 @@ var config = {
       { name: "prompt_persistent_with_interval", "weight": 1 },
       { name: "prompt_not_persistent_with_interval", "weight": 1 },
       { name: "prompt_transient_with_interval", "weight": 1 },
+      { name: "prompt_persistent_close_button", "weight": 1 },
+      { name: "prompt_persistent_with_interval_close_button", "weight": 1 }
     ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
@@ -27,15 +32,27 @@ var config = {
       * - If there is no key for an endStudy reason, no url will open.
       * - usually surveys, orientations, explanations
       */
-    "endings": {},
+    "endings": {
+      /** standard endings */
+      "user-disable": {
+        "baseUrl": "https://qsurvey.mozilla.com/"
+      },
+      "ineligible": {
+        "baseUrl": null
+      },
+      "expired": {
+        "baseUrl": "https://qsurvey.mozilla.com/"
+      }
+    },
     "telemetry": {
       "send": true, // assumed false. Actually send pings?
       "removeTestingFlag": false,  // Marks pings as testing, set true for actual release
       // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
-    "promptInterval": 0.0001, // in days (~ 2 mins)
+    "promptInterval": .0013, // in day(s)
     "promptTransientTime": 30000,    // in ms (30 seconds)
+    "supportUrl": "https://support.mozilla.org/en-US/", // Url with download settings reset instructions
   },
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!

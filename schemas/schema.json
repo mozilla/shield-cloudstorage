@@ -9,7 +9,8 @@
     "branch_message": {
       "type": "string",
       "enum": ["addon_init", "download_prefs", "prompt_save_click", "prompt_opted_in",
-               "prompt_cancel_click", "prompt_rejected", "download_started"]
+               "prompt_cancel_click", "prompt_rejected", "download_started",
+               "gdrive_custom_path", "prompt_alignment"]
     },
     "provider_key": {
       "type": "string",
@@ -26,6 +27,9 @@
       "timestamp": { "type": "string" },
       "provider_count": { "type": "string" },
       "provider_keys": { "type": "string" },
+      "window_width": { "type": "string" },
+      "window_height": { "type": "string" },
+      "isPromptOut": { "type": "string" }
     }
   }
 }

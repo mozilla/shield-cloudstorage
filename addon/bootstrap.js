@@ -94,7 +94,7 @@ async function startup(addonData, reason) {
   }
 }
 
-function shutdown(addonData, reason) {
+async function shutdown(addonData, reason) {
   // Uninitialize cloud storage add-on specific observers
   if (studyUtils.getVariation().name !== "control") {
     uninitialize();
@@ -105,7 +105,7 @@ function shutdown(addonData, reason) {
   // if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
     console.log("uninstall or disable");
-    cleanUpPrefs();
+    await cleanUpPrefs();
     if (!studyUtils._isEnding) {
       // we are the first requestors, must be user action.
       console.log("user requested shutdown");
@@ -141,7 +141,6 @@ function initialize() {
 async function observe(subject, topic, data) {
   switch (topic) {
     case "cloudstorage-prompt-notification":
-      console.log("notification receivced:", data);
       await studyUtils.telemetry({ message: "download_started" });
       await CloudStorageView.handlePromptNotification(data);
       break;
@@ -151,10 +150,10 @@ async function observe(subject, topic, data) {
 async function initTreatments() {
   let treatment = studyUtils.getVariation().name;
   let propertiesURL = "chrome://cloud/locale/storage.properties";
+  let isCloseHidden = true;
   let isNotificationPersistent = false;
   let notificationTransientTime = null;
   let interval = 0; // 0 days
-  console.log("initTreatments:", treatment);
 
   switch (treatment) {
     case "prompt_persistent":
@@ -188,10 +187,26 @@ async function initTreatments() {
       isNotificationPersistent = true;
       notificationTransientTime = studyConfig.promptTransientTime;
       break;
+    case "prompt_persistent_close_button":
+      // Fully persistent prompt, can be removed after explicitly
+      // closing the prompt or when user accepts or rejects the request
+      // Shows 'x' close button of prompt
+      isNotificationPersistent = true;
+      isCloseHidden = false;
+      break;
+    case "prompt_persistent_with_interval_close_button":
+      // Treatment uses persistent prompt. When dismissed shows next
+      // prompt after promptInterval (specified in days inside config.jsm)
+      // Shows 'x' close button of prompt
+      interval = studyConfig.promptInterval;
+      isNotificationPersistent = true;
+      isCloseHidden = false;
+      break;
   }
   Services.prefs.setBoolPref("cloud.services.api.enabled", true);
   Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
-  await CloudStorageView.init(studyUtils, propertiesURL, isNotificationPersistent, notificationTransientTime);
+  await CloudStorageView.init(studyUtils, propertiesURL, isCloseHidden,
+                              isNotificationPersistent, notificationTransientTime);
 }
 
 function uninitialize() {
@@ -210,13 +225,22 @@ function uninitialize() {
   Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 }
 
-function cleanUpPrefs() {
+async function cleanUpPrefs() {
   // Ensure cloud storage study related prefs are cleared
   const CLOUD_SERVICES_PREF = "cloud.services.";
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "lastprompt");
-  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
-  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "rejected.key");
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "rejected.key");
+
+  // Check if user downloads prefernces are set to provider download folder,
+  // if yes we should let user keep using provider download folder and show
+  // support page with instruction to reset download settings
+  if (Services.prefs.getCharPref("cloud.services.storage.key", "")) {
+    await studyUtils.openTab(studyConfig.supportUrl);
+    return;
+  }
+
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "api.enabled");
 }
 
