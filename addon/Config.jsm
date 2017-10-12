@@ -50,7 +50,7 @@ var config = {
       // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
-    "promptInterval": .0013, // in day(s)
+    "promptInterval": 1, // in day(s)
     "promptTransientTime": 30000,    // in ms (30 seconds)
     "supportUrl": "https://support.mozilla.org/en-US/", // Url with download settings reset instructions
   },
