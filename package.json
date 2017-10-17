@@ -1,5 +1,5 @@
 {
-  "name": "shield-cloud-storage-study",
+  "name": "cloud-storage-study",
   "version": "1.0.0",
   "description": "Extension that facilitate pre-existing cloud provider users to save downloads in cloud",
   "main": "bootstrap.js",
@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "XPI=shield-cloudstorage.xpi bash ./bin/xpi.sh",
+    "build": "XPI=cloud-storage-study@shield.mozilla.org-v1.0.xpi bash ./bin/xpi.sh",
     "eslint": "eslint addon --ext jsm --ext js --ext json --"
   }
 }

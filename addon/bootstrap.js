@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 const CONFIGPATH = `${__SCRIPT_URI_SPEC__}/../Config.jsm`;
 const { config } = Cu.import(CONFIGPATH, {});
 const studyConfig = config.study;
-Cu.import("resource://gre/modules/Console.jsm");
 const log = createLog(studyConfig.studyName, config.log.bootstrap.level);  // defined below.
 
 const STUDYUTILSPATH = `${__SCRIPT_URI_SPEC__}/../${studyConfig.studyUtilsPath}`;
@@ -69,7 +68,14 @@ async function startup(addonData, reason) {
   studyUtils.setLoggingLevel(config.log.studyUtils.level);
   const variation = await chooseVariation();
   studyUtils.setVariation(variation);
-  Jsm.import(config.modules);
+
+  // Always set cloud.services.shieldstudy.expire pref if it's not set.
+  // This is needed till opt-out expiration is supported in StudyUtils
+  if (!Services.prefs.getCharPref(studyConfig.studyExpiredPref, "")) {
+    const today = new Date();
+    const expireDate = new Date(today.setDate(today.getDate() + studyConfig.studyDuration)).toString();
+    Services.prefs.setCharPref(studyConfig.studyExpiredPref, expireDate);
+  }
 
   if ((REASONS[reason]) === "ADDON_INSTALL") {
     studyUtils.firstSeen();  // sends telemetry "enter"
@@ -84,7 +90,12 @@ async function startup(addonData, reason) {
   }
   await studyUtils.startup({reason});
 
-  console.log(`info ${JSON.stringify(studyUtils.info())}`);
+  const expirationDate = new Date(Services.prefs.getCharPref(studyConfig.studyExpiredPref, ""));
+  if (new Date() > expirationDate) {
+    studyUtils.endStudy({ reason: "expired" });
+  }
+
+  log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
   // Continue initializing cloud storage add-on for
   // branches other than "control"
@@ -99,22 +110,18 @@ async function shutdown(addonData, reason) {
   if (studyUtils.getVariation().name !== "control") {
     uninitialize();
   }
-
-  console.log("shutdown", REASONS[reason] || reason);
+  log.debug("shutdown", REASONS[reason] || reason);
   // are we uninstalling?
   // if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
-    console.log("uninstall or disable");
+    log.debug("uninstall or disable");
     await cleanUpPrefs();
     if (!studyUtils._isEnding) {
       // we are the first requestors, must be user action.
-      console.log("user requested shutdown");
+      log.debug("user requested shutdown");
       studyUtils.endStudy({reason: "user-disable"});
     }
   }
-
-  console.log("Jsms unloading");
-  Jsm.unload(config.modules);
 }
 
 function initialize() {
@@ -231,12 +238,13 @@ async function cleanUpPrefs() {
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "lastprompt");
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
   Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "rejected.key");
+  Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "shieldstudy.expire");
 
-  // Check if user downloads prefernces are set to provider download folder,
-  // if yes we should let user keep using provider download folder and show
-  // support page with instruction to reset download settings
+  // Check if user downloads preferences are set to provider download folder,
+  // if yes we should let user keep using provider download folder
+  // and log it in telemetry
   if (Services.prefs.getCharPref("cloud.services.storage.key", "")) {
-    await studyUtils.openTab(studyConfig.supportUrl);
+    await studyUtils.telemetry({ message: "cloud_storage_opted_in" });
     return;
   }
 
@@ -283,20 +291,4 @@ async function chooseVariation() {
   }
   log.debug(`variation: ${toSet} source:${source}`);
   return toSet;
-}
-
-// jsm loader / unloader
-class Jsm {
-  static import(modulesArray) {
-    for (const module of modulesArray) {
-      log.debug(`loading ${module}`);
-      Cu.import(module);
-    }
-  }
-  static unload(modulesArray) {
-    for (const module of modulesArray) {
-      log.debug(`Unloading ${module}`);
-      Cu.unload(module);
-    }
-  }
 }

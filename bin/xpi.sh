@@ -7,7 +7,7 @@ set -eu
 BASE_DIR="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")"
 TMP_DIR=$(mktemp -d)
 DEST="${TMP_DIR}/addon"
-XPI="${XPI:-shield-cloudstorage.xpi}"
+XPI="${XPI:-cloud-storage-study@shield.mozilla.org-v1.0.xpi}"
 mkdir -p $DEST
 
 # deletes the temp directory

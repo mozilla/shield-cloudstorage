@@ -11,9 +11,6 @@ var EXPORTED_SYMBOLS = ["config"];
 var config = {
   "study": {
     "studyName": "cloud-storage-study", // no spaces, for all the reasons
-    "variation": {
-      "name": "prompt_persistent"
-    },
     "weightedVariations": [
       { name: "control", "weight": 1 },
       { name: "prompt_persistent", "weight": 1 },
@@ -35,32 +32,27 @@ var config = {
     "endings": {
       /** standard endings */
       "user-disable": {
-        "baseUrl": "https://qsurvey.mozilla.com/"
-      },
-      "ineligible": {
-        "baseUrl": null
+        "baseUrl": "https://qsurvey.mozilla.com/s3/Cloud-Storage-Shield-Study-End-Survey"
       },
       "expired": {
-        "baseUrl": "https://qsurvey.mozilla.com/"
+        "baseUrl": "https://qsurvey.mozilla.com/s3/Cloud-Storage-Shield-Study-End-Survey"
       }
     },
     "telemetry": {
       "send": true, // assumed false. Actually send pings?
       "removeTestingFlag": false,  // Marks pings as testing, set true for actual release
-      // TODO "onInvalid": "throw"  // invalid packet for schema?  throw||log
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
     "promptInterval": 1, // in day(s)
     "promptTransientTime": 30000,    // in ms (30 seconds)
-    "supportUrl": "https://support.mozilla.org/en-US/", // Url with download settings reset instructions
+    "studyExpiredPref": "cloud.services.shieldstudy.expire",
+    "studyDuration": 14, // in days
   },
   "isEligible": async function() {
     // get whatever prefs, addons, telemetry, anything!
     // Cu.import can see 'firefox things', but not package things.
     return true;
   },
-  // addon-specific modules to load/unload during `startup`, `shutdown`
-  "modules": [],
   // sets the logging for BOTH the bootstrap file AND shield-study-utils
   "log": {
     // Fatal: 70, Error: 60, Warn: 50, Info: 40, Config: 30, Debug: 20, Trace: 10, All: -1,

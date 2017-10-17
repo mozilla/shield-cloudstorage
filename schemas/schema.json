@@ -10,7 +10,7 @@
       "type": "string",
       "enum": ["addon_init", "download_prefs", "prompt_save_click", "prompt_opted_in",
                "prompt_cancel_click", "prompt_rejected", "download_started",
-               "gdrive_custom_path", "prompt_alignment"]
+               "gdrive_custom_path", "prompt_alignment", "cloud_storage_opted_in"]
     },
     "provider_key": {
       "type": "string",
