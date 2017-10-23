@@ -92,7 +92,8 @@ async function startup(addonData, reason) {
 
   const expirationDate = new Date(Services.prefs.getCharPref(studyConfig.studyExpiredPref, ""));
   if (new Date() > expirationDate) {
-    studyUtils.endStudy({ reason: "expired" });
+    await studyUtils.endStudy({ reason: "expired" });
+    return;
   }
 
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);

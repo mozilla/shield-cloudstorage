@@ -18,9 +18,7 @@ var config = {
       { name: "prompt_transient", "weight": 1 },
       { name: "prompt_persistent_with_interval", "weight": 1 },
       { name: "prompt_not_persistent_with_interval", "weight": 1 },
-      { name: "prompt_transient_with_interval", "weight": 1 },
-      { name: "prompt_persistent_close_button", "weight": 1 },
-      { name: "prompt_persistent_with_interval_close_button", "weight": 1 }
+      { name: "prompt_transient_with_interval", "weight": 1 }
     ],
     /** **endings**
       * - keys indicate the 'endStudy' even that opens these.
