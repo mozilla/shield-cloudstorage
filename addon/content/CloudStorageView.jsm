@@ -55,8 +55,6 @@ var CloudStorageView = {
       this.isNotificationPersistent = isPersistent;
       this.notificationTransientTime = transientTime;
 
-      await CloudViewInternal.init();
-
       // Get number of providers on user desktop and send data to telemetry.
       // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
       // This is workaround to force initialize API for first time enter to
@@ -74,6 +72,12 @@ var CloudStorageView = {
         provider_count: providers.size.toString(),
         provider_keys: keys.join(","),
       });
+
+      // Exit without initializing CloudViewInternal for control branch
+      if (studyUtils.getVariation().name == "control") {
+        return;
+      }
+      await CloudViewInternal.init();
     } catch (err) {
       Cu.reportError(err);
     }

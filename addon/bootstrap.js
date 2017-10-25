@@ -98,12 +98,19 @@ async function startup(addonData, reason) {
 
   log.debug(`info ${JSON.stringify(studyUtils.info())}`);
 
+  // Add observer to track downloads in all branches
+  Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
+
   // Continue initializing cloud storage add-on for
   // branches other than "control"
   // "control" group is users with default setup and no UI changes.
   if (studyUtils.getVariation().name !== "control") {
     initialize();
   }
+  // Initialize treatment for all branches
+  // For 'control' branch exit CloudStorageView.init() after
+  // recording providers found on user desktop
+  initTreatments();
 }
 
 async function shutdown(addonData, reason) {
@@ -112,6 +119,7 @@ async function shutdown(addonData, reason) {
     uninitialize();
   }
   log.debug("shutdown", REASONS[reason] || reason);
+  Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
   // are we uninstalling?
   // if so, user or automatic?
   if (reason === REASONS.ADDON_UNINSTALL || reason === REASONS.ADDON_DISABLE) {
@@ -141,16 +149,16 @@ function initialize() {
     Services.prefs.addObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
     Services.prefs.addObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
   }
-
-  Services.obs.addObserver(observe, "cloudstorage-prompt-notification");
-  initTreatments();
 }
 
 async function observe(subject, topic, data) {
   switch (topic) {
     case "cloudstorage-prompt-notification":
       await studyUtils.telemetry({ message: "download_started" });
-      await CloudStorageView.handlePromptNotification(data);
+      // Handle prompt notification for all branches other than 'control'
+      if (studyUtils.getVariation().name !== "control") {
+        await CloudStorageView.handlePromptNotification(data);
+      }
       break;
   }
 }
@@ -230,7 +238,6 @@ function uninitialize() {
 
   Services.prefs.removeObserver("browser.download.folderList", CloudStorageView.downloadPrefObserve);
   Services.prefs.removeObserver("browser.download.useDownloadDir", CloudStorageView.downloadPrefObserve);
-  Services.obs.removeObserver(observe, "cloudstorage-prompt-notification");
 }
 
 async function cleanUpPrefs() {
