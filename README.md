@@ -26,6 +26,11 @@ Add-on for cloud storage Fx56 shield experiment
 * Save with always remember checked - Sets provider download folder as default download by updating pref browser.download.folderlist as 3 and any subsequent download will be saved to provider download folder. In about:preferences, under 'Downloads' user is shown an option 'Save to Provider Name'
 * Cancel with always remember checked - Set provider as rejected in cloud.services.rejected.key  pref and user will never be prompted again to use the provider. If a user has multiple provider on desktop , other providers will be used in door hangar prompt.
 
-3. cloud.services.prompt.interval pref is set using value promptInterval in addon/content/Config.jsm, pref sets the interval at which user should be prompted again.
+3. cloud.services.prompt.interval pref is set using value promptInterval in addon/Config.jsm, pref sets the interval at which user should be prompted again.
 
 4. Downloaded item will be marked with provider icon in Download history
+
+## Helpful links
+* [Bug 1399231](https://bugzilla.mozilla.org/show_bug.cgi?id=1399231)
+* [Bug 1399198](https://bugzilla.mozilla.org/show_bug.cgi?id=1399198)
+* [Bug 1357160](https://bugzilla.mozilla.org/show_bug.cgi?id=1357160)
