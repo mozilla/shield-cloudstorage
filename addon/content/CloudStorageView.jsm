@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadSync",
+                                  "resource://gre/modules/cloudstorage/DownloadSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -384,7 +386,7 @@ var CloudViewInternal = {
    *         in DownloadList object
    */
 
-  async _moveDownload(download, dwnldTargetPath, providerDwnldFldrPath) {
+  async _moveDownload(download, dwnldTargetPath, providerDwnldFldrPath, key) {
     let destPath = providerDwnldFldrPath ?
       OS.Path.join(providerDwnldFldrPath, OS.Path.basename(dwnldTargetPath)) : "";
 
@@ -422,6 +424,9 @@ var CloudViewInternal = {
 
     // Remove original download in favor of moved download from download UI panel
     await publicList.remove(download);
+
+    // Write download to config json
+    DownloadSync.writeConfigDownload(movedDownload, key);
   },
 
   async handleMove() {
@@ -433,6 +438,8 @@ var CloudViewInternal = {
     let providerDownloadFolder = OS.Path.join(this.prefCloudProvider.value.downloadPath,
       this.prefCloudProvider.value.typeSpecificData["default"]);
 
+    let providerKey = this.prefCloudProvider.key;
+
     // create download directory if it doesn't exist
     try {
       await OS.File.makeDir(providerDownloadFolder, {ignoreExisting: true});
@@ -443,7 +450,7 @@ var CloudViewInternal = {
 
     this.inProgressDownloads.forEach(async (value, key) => {
       if (value.succeeded) {
-        await this._moveDownload(value, key, providerDownloadFolder);
+        await this._moveDownload(value, key, providerDownloadFolder, providerKey);
         this.inProgressDownloads.delete(key);
       }
     });

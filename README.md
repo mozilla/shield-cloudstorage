@@ -8,6 +8,7 @@ Add-on for cloud storage Fx56 shield experiment
 
 ## pre-requisite
 - Desktop with cloud storage provider client such as [Dropbox](https://www.dropbox.com/install)
+- Need Firefox build with download sync api from patch in bug [Bug 1432349](https://bugzilla.mozilla.org/show_bug.cgi?id=1432349)
 
 ## in Firefox:
 
@@ -34,3 +35,4 @@ Add-on for cloud storage Fx56 shield experiment
 * [Bug 1399231](https://bugzilla.mozilla.org/show_bug.cgi?id=1399231)
 * [Bug 1399198](https://bugzilla.mozilla.org/show_bug.cgi?id=1399198)
 * [Bug 1357160](https://bugzilla.mozilla.org/show_bug.cgi?id=1357160)
+* [Bug 1432349](https://bugzilla.mozilla.org/show_bug.cgi?id=1432349)

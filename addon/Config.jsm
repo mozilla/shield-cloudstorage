@@ -41,7 +41,7 @@ var config = {
       "removeTestingFlag": false,  // Marks pings as testing, set true for actual release
     },
     "studyUtilsPath": `./StudyUtils.jsm`,
-    "promptInterval": 1, // in day(s)
+    "promptInterval": 0, // in day(s)
     "promptTransientTime": 30000,    // in ms (30 seconds)
     "studyExpiredPref": "cloud.services.shieldstudy.expire",
     "studyDuration": 14, // in days
