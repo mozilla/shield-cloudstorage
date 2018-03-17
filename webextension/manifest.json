@@ -1,0 +1,43 @@
+{
+  "name": "Cloud Storage Shield Study Web Extension Experiment (CSSSWEE)",
+  "description": "Cloud Storage Shield study as WebExtension Experiments",
+  "version": "1.0.0",
+  "applications": {
+    "gecko": {
+      "id": "cloudstorage-webextensionExperiment@shield.mozilla.org"
+    }
+  },
+  "author": "Mozilla (https://mozilla.org/)",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "experiment_apis": {
+    "cloudstorage": {
+      "schema": "./privileged/ui/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "./privileged/ui/cloudstorage.js",
+        "paths": [["cloudstorage"]]
+      }
+    }
+  },
+  "homepage_url": "https://github.com/mozilla/shield-cloudstorage/",
+  "icons": {
+    "48": "./skin/download.svg",
+    "96": "./skin/download.svg"
+  },
+  "license": "MPL-2.0",
+  "manifest_version": 2,
+  "permissions": [
+    "management"
+  ],
+  "web_accessible_resources": [
+    "./privileged/ui/cloudstorage.xml",
+    "./skin/clouddownloads.css",
+    "./skin/download.svg",
+    "./skin/dropbox.svg",
+    "./skin/googledrive.svg"
+  ]
+}

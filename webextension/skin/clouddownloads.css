@@ -1,0 +1,126 @@
+/*** Common-styled clouddownloads notification ***/
+
+[data-provider-icon="dropbox"] {
+  --provider-icon: url("/skin/dropbox.svg");
+}
+
+[data-provider-icon="googledrive"] {
+  --provider-icon: url("/skin/googledrive.svg");
+}
+
+[data-provider-icon="default"] {
+  --provider-icon: url("/skin/download.svg");
+}
+
+richlistitem[type="download"] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
+}
+
+richlistitem.download[active] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
+}
+
+.dropbox {
+  margin: 0 5px;
+  background: url("/skin/dropbox.svg") top right / 16px no-repeat;
+}
+
+.googledrive {
+  margin: 0 5px;
+  background: url("/skin/googledrive.svg") top right / 16px no-repeat;
+}
+
+#panelCloudNotification {
+  padding: 16px 16px 10px 16px;
+  border-bottom: 1px solid var(--panel-separator-color);
+  min-height: 100px;
+}
+
+#panelCloudNotification:not([show]) {
+  display: none;
+}
+
+#panelCloudNotification .text-link {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+#cloudDownloadTypeIcon {
+  margin-inline-end: 5px;
+  margin-top: 5px;
+  width: 32px;
+  height: 32px;
+  background: var(--provider-icon) top right / 32px no-repeat;
+}
+
+#cloudDownloadContainer {
+  font-size: calc(125% * var(--downloads-item-font-size-factor));
+}
+
+#cloudDownloadTitle {
+  font-weight: 500;
+}
+
+#cloudDownloadDetail {
+  opacity: var(--downloads-item-details-opacity);
+  margin-inline-end: 0px !important;
+}
+
+#multiProviderSelect:not([show]) {
+  display: none;
+}
+
+#multiProviderSelect radio {
+  -moz-appearance: none !important;
+  min-width: 16px;
+  height: 16px;
+}
+
+#multiProviderSelect .radio-icon {
+  margin-inline-end: 6px !important;
+  width: 16px;
+  margin-inline-start: 6px;
+  height: 16px;
+}
+
+#multiProviderSelect radio[provider="dropbox"] {
+  list-style-image: url("/skin/dropbox.svg");
+}
+
+#multiProviderSelect radio[provider="googledrive"] {
+  list-style-image: url("/skin/googledrive.svg");
+}
+
+#panelCloudNotification button {
+  -moz-appearance: none !important;
+  flex: 1;
+  border: none;
+  background-color: #e4e4e4;
+  color: #0c0c0d !important;
+  border-radius: 2px;
+  font-size: 11px;
+  min-width: 210px !important;
+  height: 32px;
+  margin: 5px 5px 10px 0 !important;
+}
+
+#panelCloudNotification button[default] {
+  color: #ffffff !important;
+  background-color: #0060df !important;
+}
+
+#panelCloudNotification button[disabled] {
+  opacity: 0.4;
+}
+
+#panelCloudNotification button:hover:not([disabled]) {
+    background-color: rgba(12, 12, 13, 0.2) !important;
+}
+
+#panelCloudNotification button[default]:hover:not([disabled]) {
+    background-color: #003eaa !important;
+}
+
+#moveDownload[hidden="true"] + menuseparator {
+  display:none;
+}
