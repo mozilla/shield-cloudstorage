@@ -1,0 +1,27 @@
+[
+  {
+    "namespace": "ui",
+    "description": "CloudAPI init",
+    "functions": [
+      {
+        "name": "init",
+        "type": "function",
+        "description": "initialise ui",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "setStylesURL",
+        "type": "function",
+        "description": "Sets the value of a CSS path",
+        "async": true,
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string"
+          }
+        ]
+      }
+    ]
+  }
+]

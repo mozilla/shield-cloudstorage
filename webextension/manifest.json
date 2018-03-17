@@ -1,0 +1,35 @@
+{
+  "name": "CloudStorage-WebExtension-shield-study",
+  "applications": {
+    "gecko": { "id": "webextensionExperiment@shield.mozilla.org" }
+  },
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "web_accessible_resources": [
+    "./skin/clouddownloads.css",
+    "./skin/dropbox.svg",
+    "./skin/googledrive.svg",
+    "./skin/download.svg"
+  ],
+  "experiment_apis": {
+    "prefs": {
+      "schema": "./privileged/prefs/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "./privileged/prefs/prefs.js",
+        "paths": [["prefs"]]
+      }
+    },
+    "ui": {
+      "schema": "./privileged/ui/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "./privileged/ui/ui.js",
+        "paths": [["ui"]]
+      }
+    }
+  }
+}

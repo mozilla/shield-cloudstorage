@@ -1,0 +1,116 @@
+/*** Common-styled clouddownloads notification ***/
+
+[data-provider-icon="dropbox"] {
+  --provider-icon: url("/skin/dropbox.svg");
+}
+
+[data-provider-icon="googledrive"] {
+  --provider-icon: url("/skin/googledrive.svg");
+}
+
+[data-provider-icon="default"] {
+  --provider-icon: url("/skin/download.svg");
+}
+
+#panelCloudNotification {
+  padding: 16px 16px 10px 16px;
+  border-bottom: 1px solid var(--panel-separator-color);
+  min-height: 100px;
+}
+
+#panelCloudNotification:not([show]) {
+  display: none;
+}
+
+#panelCloudNotification .text-link {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+/*
+#panelCloudNotification description,
+#panelCloudNotification label {
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+}*/
+
+#cloudDownloadTypeIcon {
+  margin-inline-end: 5px;
+  margin-top: 5px;
+  width: 32px;
+  height: 32px;
+}
+
+#cloudDownloadTypeIcon {
+  background: var(--provider-icon) top right / 32px no-repeat;
+}
+
+#cloudDownloadContainer {
+  font-size: calc(125% * var(--downloads-item-font-size-factor));
+}
+
+#cloudDownloadTitle {
+  font-weight: 500;
+}
+
+#cloudDownloadDetail {
+  opacity: var(--downloads-item-details-opacity);
+}
+
+#multiProviderSelect:not([show]) {
+  display: none;
+}
+
+#multiProviderSelect radio {
+  min-width: 16px;
+  -moz-appearance: none;
+  height: 16px;
+}
+
+#multiProviderSelect .radio-icon {
+  margin-inline-end: 6px;
+  width: 16px;
+  margin-inline-start: 6px;
+  height: 16px;
+}
+
+#multiProviderSelect radio[provider="dropbox"] {
+  list-style-image: url("/skin/dropbox.svg");
+}
+
+#multiProviderSelect radio[provider="googledrive"] {
+  list-style-image: url("/skin/googledrive.svg");
+}
+
+.cloudNotificationButton {
+  -moz-appearance: none;
+  flex: 1;
+  border: none;
+  background-color: #e4e4e4;
+  color: #0c0c0d;
+  border-radius: 2px;
+  font-size: 11px;
+  min-width: 210px;
+  height: 32px;
+  margin: 5px 5px 10px 0;
+}
+
+.cloudNotificationButton[default] {
+  color: #ffffff;
+  background-color: #0060df;
+}
+
+.cloudNotificationButton[disabled] {
+  opacity: 0.4;
+}
+
+.cloudNotificationButton:hover:not([disabled]) {
+    background-color: rgba(12, 12, 13, 0.2);
+}
+
+.cloudNotificationButton[default]:hover:not([disabled]) {
+    background-color: #003eaa;
+}
+
+.cloudDownloadSyncMessage:not([show]) {
+  display: none;
+}

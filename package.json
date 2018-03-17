@@ -1,26 +1,12 @@
 {
-  "name": "cloud-storage-study",
-  "version": "1.0.3",
-  "description": "Extension that facilitate pre-existing cloud provider users to save downloads in cloud",
-  "main": "bootstrap.js",
-  "repository": "https://github.com/mozilla/shield-cloudstorage.git",
-  "author": "Punam Dahiya <pdahiya@mozilla.com>",
-  "license": "MPL-2.0",
-  "keywords": [],
-  "dependencies": {},
-  "devDependencies": {
-    "eslint": "^4.4.1",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-mozilla": "^0.3.4",
-    "eslint-plugin-node": "^5.1.1",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "jshint": "^2.9.5"
-  },
+  "name": "cloud-storage-shield-study-webextension-experiment",
+  "version": "1.0.0",
+  "description": "Cloud Storage Shield study as WebExtension Experiments",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "XPI=cloud-storage-study@shield.mozilla.org-v1.0.3.xpi bash ./bin/xpi.sh",
-    "eslint": "eslint addon --ext jsm --ext js --ext json --"
-  }
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
