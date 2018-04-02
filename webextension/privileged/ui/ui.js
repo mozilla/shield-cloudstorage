@@ -17,27 +17,30 @@ ChromeUtils.defineModuleGetter(this, "RecentWindow",
 
 const CLOUD_SERVICES_PREF = "cloud.services.";
 const CLOUD_PROVIDER_DEFAULT_ICON = "default";
+const Ci = Components.interfaces;
 
 this.ui = class extends ExtensionAPI {
   getAPI(context) {
     return {
       ui: {
-        async init() {
-          CloudDownloadsView.init();
-          return "initialised";
-        },
         async setStylesURL(path) {
           CloudDownloadsView.stylesURL = path;
           return path;
-        }
+        },
+        async setCloudStoragePref(isEnable) {
+          Services.prefs.setBoolPref(CLOUD_SERVICES_PREF + "api.enabled", isEnable);
+          return "API Enabled";
+        },
       }
     };
   }
 };
 
- var CloudDownloadsView = {
+
+var CloudDownloadsView = {
   isInitialized: false,
   stylesURL: null,
+  providers: null,
   notificationHTML: `
     <hbox>
       <image id='cloudDownloadTypeIcon'/>
@@ -70,41 +73,120 @@ this.ui = class extends ExtensionAPI {
     return name.toLowerCase().replace(" ", "");
   },
 
-  registerNotification() {
+  async registerContextMenu() {
+    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+
+    if (!browserWindow || !browserWindow.document) {
+      return;
+    }
+
+    // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
+    // This is workaround to force initialize API for first time enter to
+    // ensure getStorageProviders call returns successfully.
+    await CloudStorage.getDownloadFolder();
+    this.providers = await CloudStorage.getStorageProviders();
+
+
+    // Continue only if cloud providers exists on user device
+    if (this.providers.size === 0) {
+      return;
+    }
+
+    let aPopupMenu = browserWindow.document.getElementById("downloadsContextMenu");
+    if (!aPopupMenu) {
+      return;
+    }
+
+    // TBD: Render multiple providers in context menu
+    let menuItem = aPopupMenu.getElementsByAttribute("command", "downloadsCmd_copyLocation")[0];
+    if (menuItem) {
+      let fragment = browserWindow.document.createDocumentFragment();
+      let separator = browserWindow.document.createElement('menuseparator');
+      fragment.appendChild(separator);
+
+      // Add skeleton Move to menu item in context menu
+      let moveDownloadItem = browserWindow.document.createElement('menuitem');
+      moveDownloadItem.setAttribute('id', 'moveDownload');
+      moveDownloadItem.setAttribute('hidden', 'true');
+      fragment.appendChild(moveDownloadItem);
+      aPopupMenu.insertBefore(fragment, menuItem.nextSibling);
+    }
+
+    aPopupMenu.addEventListener("click", this);
+
+    let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
+    dwnldsListBox.addEventListener("contextmenu", this);
+  },
+
+  unRegisterContextMenu() {
+    let browserWindow= RecentWindow.getMostRecentBrowserWindow();
+
+    let moveDownloadMenuItem = browserWindow.document.getElementById("moveDownload");
+    if (!moveDownloadMenuItem) {
+      return;
+    }
+
+    let aPopupMenu = browserWindow.document.getElementById("downloadsContextMenu");
+    aPopupMenu.removeEventListener("click", this);
+    aPopupMenu.removeChild(moveDownloadMenuItem);
+
+    let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
+    dwnldsListBox.removeEventListener("contextmenu");
+  },
+
+  async registerNotification() {
     Services.obs.addObserver(this.observe, "cloudstorage-prompt-notification");
     this.isInitialized = true;
   },
 
   unRegisterNotification() {
     Services.obs.removeObserver(this.observe, "cloudstorage-prompt-notification");
-    RecentWindow.getMostRecentBrowserWindow().document.getElementById("panelCloudNotification").
-      removeEventListener("click", this);
     this.isInitialized = false;
+    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+    let panelCloudNotification = browserWindow.document.getElementById("panelCloudNotification");
+    if (!panelCloudNotification) {
+      return;
+    }
+    panelCloudNotification.removeEventListener("click", this);
+
+    let panelDownload = browserWindow.document.getElementById("downloadsPanel-mainView");
+    panelDownload.removeChild(panelCloudNotification);
   },
 
-  observe(subject, topic, data) {
+  async initWindowListener() {
+    // Get the list of browser windows already open
+    let windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+      WindowListener.setupBrowserUI(domWindow);
+    }
+
+    // Wait for any new browser windows to open
+    Services.wm.addListener(WindowListener);
+  },
+
+  async init() {
+    if (!this.gIsAPIEnabled) {
+      if (this.isInitialized) {
+        this.unRegisterNotification();
+        this.unRegisterContextMenu();
+      }
+      return;
+    }
+    await this.initWindowListener();
+    await this.registerNotification();
+    await this.registerContextMenu();
+  },
+
+  async observe(subject, topic, data) {
     switch (topic) {
       case "cloudstorage-prompt-notification":
-        CloudDownloadsView.showNotification();
+        await CloudDownloadsView.showNotification();
         break;
     }
   },
 
-  init() {
-    if (!this.gIsAPIEnabled) {
-      if (this.isInitialized) {
-        this.unRegisterNotification();
-      }
-      return;
-    }
-    this.registerNotification();
-  },
-
-  showNotification() {
-    this.initUI();
-  },
-
-  async initUI() {
+  async showNotification() {
     let browserWindow = this.browserWindow;
 
     if (!browserWindow || !browserWindow.document) {
@@ -123,7 +205,15 @@ this.ui = class extends ExtensionAPI {
       return;
     }
 
-    let providersMap = await CloudStorage.getStorageProviders();
+    let panelCloudNotification = browserWindow.document.getElementById("panelCloudNotification");
+    if (panelCloudNotification) {
+      if (!panelCloudNotification.getAttribute("show")) {
+       panelCloudNotification.setAttribute("show", "true");
+      }
+      return;
+    }
+
+    let providersMap = this.providers;
 
     // Continue only if cloud providers exists on user device
     if (providersMap.size === 0) {
@@ -145,7 +235,7 @@ this.ui = class extends ExtensionAPI {
                           document.documentElement);
 
     let fragment = document.createDocumentFragment();
-    let panelCloudNotification = document.createElement('vbox');
+    panelCloudNotification = document.createElement('vbox');
     panelCloudNotification.setAttribute('id', 'panelCloudNotification');
     panelCloudNotification.unsafeSetInnerHTML(this.notificationHTML);
     fragment.appendChild(panelCloudNotification);
@@ -214,7 +304,28 @@ this.ui = class extends ExtensionAPI {
     multiProviderSelect.setAttribute("show", "true");
   },
 
+  displayMoveToCloudContextMenuItem(downloadElement) {
+    let aPopupMenu = RecentWindow.getMostRecentBrowserWindow().document.getElementById("downloadsContextMenu");
+    let menuItem = aPopupMenu.getElementsByAttribute("id", "moveDownload")[0];
+    if (menuItem) {
+      menuItem.setAttribute("hidden", "true");
+      let downloadType = downloadElement._shell.element.getAttribute("cloudstorage");
+
+      // TBD: handle multiple providers in context menu when available
+      if (downloadType === "local") {
+        // move to first provider available
+        let provider = this.providers.entries().next().value;
+        menuItem.setAttribute('label', 'Move to ' + provider[1].displayName);
+        menuItem.setAttribute('key', provider[0]);
+        menuItem.setAttribute('source', downloadElement._shell.download.source.url);
+        menuItem.setAttribute('target', downloadElement._shell.download.target.path);
+        menuItem.removeAttribute('hidden');
+      }
+    }
+  },
+
   handleEvent(event) {
+    // Handle multiple providers options in notification
     if (event.target.parentElement.id === "multiProviderSelect") {
       let cloudDownloadSave = event.currentTarget.children[1].children.cloudDownloadSave;
       cloudDownloadSave.setAttribute("label", event.target.label);
@@ -222,7 +333,20 @@ this.ui = class extends ExtensionAPI {
       cloudDownloadSave.removeAttribute("disabled");
       return;
     }
+
+    // Handle rendering right provider in context menu when shown
+    if (event.type === "contextmenu" && event.currentTarget.id === "downloadsListBox") {
+      let element = event.currentTarget.selectedItem;
+      if (!element) {
+        return;
+      }
+      this.displayMoveToCloudContextMenuItem(element);
+    }
+
     switch (event.target.id) {
+      case "moveDownload":
+        // TBD: handle move download
+        break;
       case "cloudDownloadSave":
         CloudStorage.savePromptResponse(event.target.getAttribute("key"), true, true);
         event.currentTarget.removeAttribute("show");
@@ -230,7 +354,7 @@ this.ui = class extends ExtensionAPI {
       case "cloudDownloadCancel":
         // Set interval when notification was last shown
         Services.prefs.setIntPref(CLOUD_SERVICES_PREF + "lastprompt",
-                          Math.floor(Date.now() / 1000));
+                                  Math.floor(Date.now() / 1000));
         event.currentTarget.removeAttribute("show");
         break;
       case "cloudDownloadPreference":
@@ -240,6 +364,34 @@ this.ui = class extends ExtensionAPI {
           {origin, urlParams: {entrypoint: entryPoint}});
         break;
     }
+  },
+};
+
+var WindowListener = {
+  setupBrowserUI: function wm_setupBrowserUI(window) {
+    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    utils.loadSheetUsingURIString(CloudDownloadsView.stylesURL, Ci.nsIDOMWindowUtils.AGENT_SHEET);
+  },
+
+  tearDownBrowserUI: function wm_tearDownBrowserUI(window) {
+    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    utils.removeSheetUsingURIString(CloudDownloadsView.stylesURL, Ci.nsIDOMWindowUtils.AGENT_SHEET);
+  },
+
+  // nsIWindowMediatorListener functions
+  onOpenWindow: function wm_onOpenWindow(xulWindow) {
+    // A new window has opened
+    let domWindow = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindow);
+
+    // Wait for it to finish loading
+    domWindow.addEventListener("load", function listener() {
+      // If this is a browser window or places library window then setup its UI
+      if (domWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ||
+          domWindow.document.documentElement.getAttribute("windowtype") == "Places:Organizer" ) {
+        WindowListener.setupBrowserUI(domWindow);
+      }
+    }, {once: true});
   },
 };
 

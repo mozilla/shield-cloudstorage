@@ -12,6 +12,28 @@
   --provider-icon: url("/skin/download.svg");
 }
 
+richlistitem[type="download"] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
+}
+
+richlistitem.download[active] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
+}
+
+.subviewbutton.download {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage-subview") !important;
+}
+
+.dropbox {
+  margin: 0 5px;
+  background: url("/skin/dropbox.svg") top right / 16px no-repeat;
+}
+
+.googledrive {
+  margin: 0 5px;
+  background: url("/skin/googledrive.svg") top right / 16px no-repeat;
+}
+
 #panelCloudNotification {
   padding: 16px 16px 10px 16px;
   border-bottom: 1px solid var(--panel-separator-color);
@@ -26,12 +48,6 @@
   margin-left: 0px;
   margin-right: 0px;
 }
-/*
-#panelCloudNotification description,
-#panelCloudNotification label {
-  margin-inline-start: 0px;
-  margin-inline-end: 0px;
-}*/
 
 #cloudDownloadTypeIcon {
   margin-inline-end: 5px;
@@ -113,4 +129,8 @@
 
 .cloudDownloadSyncMessage:not([show]) {
   display: none;
+}
+
+#moveDownload[hidden="true"] + menuseparator {
+  display:none;
 }

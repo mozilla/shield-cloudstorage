@@ -9,6 +9,7 @@
     "scripts": ["background.js"]
   },
   "web_accessible_resources": [
+    "./privileged/ui/cloudstorage.xml",
     "./skin/clouddownloads.css",
     "./skin/dropbox.svg",
     "./skin/googledrive.svg",

@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+<bindings id="downloadBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="cloud-storage"
+           extends="chrome://browser/content/downloads/download.xml#download">
+    <implementation>
+      <method name="checkProvider">
+        <parameter name="provider"/>
+        <body><![CDATA[
+          let downloadTypeIcon = document.getAnonymousElementByAttribute(this, "class", "downloadTypeIcon");
+          let src = downloadTypeIcon.getAttribute("src").toLowerCase();
+          if (src.indexOf(provider) >= 0) {
+            return provider;
+          }
+        ]]></body>
+      </method>
+      <constructor><![CDATA[
+        // Read the src path from download type icon
+        // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
+        // and use it to highlight respective downloaded item with storage provider icon
+        //let downloadListItem = document.getAnonymousElementByAttribute(this, "type", "download")[0];
+        this.setAttribute("cloudstorage","local");
+
+        let parent = document.getAnonymousElementByAttribute(this, "class", "downloadMainArea").firstChild;
+        let downloadBlockBadge = document.getAnonymousElementByAttribute(this, "class", "downloadBlockedBadge");
+
+        let providerElem = document.createElement("image");
+        parent.insertBefore(providerElem, downloadBlockBadge);
+
+        let providers = ["dropbox", "google drive"];
+
+        // find first element in the providers array that satisfies method checkProvider
+        let result = providers.find(checkProvider, this);
+        switch (result) {
+          case "dropbox":
+            providerElem.setAttribute("class","dropbox");
+            this.setAttribute("cloudstorage","dropbox");
+            break;
+          case "google drive":
+            providerElem.setAttribute("class","googledrive");
+            this.setAttribute("cloudstorage","googledrive");
+            break;
+        }
+      ]]></constructor>
+      </implementation>
+  </binding>
+
+  <binding id="cloud-storage-subview"
+           extends="chrome://browser/content/downloads/download.xml#download-subview-toolbarbutton">
+    <implementation>
+      <method name="checkProviderSubView">
+        <parameter name="provider"/>
+        <body><![CDATA[
+          let downloadTypeIcon = document.getAnonymousElementByAttribute(this, "class", "toolbarbutton-icon");
+          let src = downloadTypeIcon.getAttribute("src").toLowerCase();
+          if (src.indexOf(provider) >= 0) {
+            return provider;
+          }
+        ]]></body>
+      </method>
+      <constructor><![CDATA[
+        // Read the src path from download type icon
+        // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
+        // and use it to highlight respective downloaded item with storage provider icon
+        //let parent = document.getAnonymousElementByAttribute(this, "class", "subviewbutton");
+
+      ]]></constructor>
+      </implementation>
+  </binding>
+</bindings>
