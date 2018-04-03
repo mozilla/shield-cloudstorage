@@ -277,6 +277,10 @@ var CloudDownloadsView = {
     multiProviderSelect.setAttribute("show", "true");
   },
 
+  iconURL(name) {
+   return new URL(this.stylesURL).origin + "/skin/" + this.formatProviderName(name) + ".svg";
+  },
+
   displayMoveToCloudContextMenuItem(downloadElement) {
     let aPopupMenu = RecentWindow.getMostRecentBrowserWindow().document.getElementById("downloadsContextMenu");
     let menuItem = aPopupMenu.getElementsByAttribute("id", "moveDownload")[0];
@@ -292,6 +296,8 @@ var CloudDownloadsView = {
         menuItem.setAttribute('key', provider[0]);
         menuItem.setAttribute('source', downloadElement._shell.download.source.url);
         menuItem.setAttribute('target', downloadElement._shell.download.target.path);
+        menuItem.setAttribute("class", "menuitem-iconic");
+        menuItem.setAttribute("image", this.iconURL(provider[1].displayName));
         menuItem.removeAttribute('hidden');
       }
     }
