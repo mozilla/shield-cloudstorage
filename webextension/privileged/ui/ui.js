@@ -19,7 +19,6 @@ this.ui = class extends ExtensionAPI {
     return {
       ui: {
         async setStylesURL(path) {
-          console.log("punam");
           console.log(CloudDownloadsView);
           CloudDownloadsView.stylesURL = path;
           return path;

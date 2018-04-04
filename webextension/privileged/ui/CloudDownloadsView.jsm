@@ -2,6 +2,18 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
                                "resource://gre/modules/CloudStorage.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloads",
+                               "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadPaths",
+                               "resource://gre/modules/DownloadPaths.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "NetUtil",
+                               "resource://gre/modules/NetUtil.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "RecentWindow",
                                "resource:///modules/RecentWindow.jsm");
 
@@ -42,12 +54,12 @@ var CloudDownloadsView = {
     return RecentWindow.getMostRecentBrowserWindow();
   },
 
-  formatProviderName(name) {
+  _formatProviderName(name) {
     return name.toLowerCase().replace(" ", "");
   },
 
   async registerContextMenu() {
-    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+    let browserWindow = this.browserWindow;
 
     if (!browserWindow || !browserWindow.document) {
       return;
@@ -92,7 +104,7 @@ var CloudDownloadsView = {
   },
 
   unRegisterContextMenu() {
-    let browserWindow= RecentWindow.getMostRecentBrowserWindow();
+    let browserWindow = this.browserWindow;
 
     let moveDownloadMenuItem = browserWindow.document.getElementById("moveDownload");
     if (!moveDownloadMenuItem) {
@@ -103,8 +115,10 @@ var CloudDownloadsView = {
     aPopupMenu.removeEventListener("click", this);
     aPopupMenu.removeChild(moveDownloadMenuItem);
 
+    // TBD: Remove menuseperator
+
     let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
-    dwnldsListBox.removeEventListener("contextmenu");
+    dwnldsListBox.removeEventListener("contextmenu", this);
   },
 
   async registerNotification() {
@@ -115,7 +129,7 @@ var CloudDownloadsView = {
   unRegisterNotification() {
     Services.obs.removeObserver(this.observe, "cloudstorage-prompt-notification");
     this.isInitialized = false;
-    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+    let browserWindow = this.browserWindow;
     let panelCloudNotification = browserWindow.document.getElementById("panelCloudNotification");
     if (!panelCloudNotification) {
       return;
@@ -126,7 +140,7 @@ var CloudDownloadsView = {
     panelDownload.removeChild(panelCloudNotification);
   },
 
-  async initWindowListener() {
+  initWindowListener() {
     // Get the list of browser windows already open
     let windows = Services.wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
@@ -138,15 +152,28 @@ var CloudDownloadsView = {
     Services.wm.addListener(WindowListener);
   },
 
+  uninitWindowListener() {
+    // Get the list of browser windows already open
+    let windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+
+      WindowListener.tearDownBrowserUI(domWindow);
+    }
+    // Stop listening for any new browser windows to open
+    Services.wm.removeListener(WindowListener);
+  },
+
   async init() {
     if (!this.gIsAPIEnabled) {
       if (this.isInitialized) {
         this.unRegisterNotification();
         this.unRegisterContextMenu();
+        this.uninitWindowListener();
       }
       return;
     }
-    await this.initWindowListener();
+    this.initWindowListener();
     await this.registerNotification();
     await this.registerContextMenu();
   },
@@ -215,14 +242,14 @@ var CloudDownloadsView = {
     panelDownload.prepend(fragment);
 
     if (providersMap.size > 1 ) {
-      this.handleMultipleProviders(providersMap, document);
+      this._addNotificationMultipleProviders(providersMap, document);
       providerDisplayName = "cloud storage";
       providerIcon = CLOUD_PROVIDER_DEFAULT_ICON;
     } else {
       let provider = providersMap.entries().next().value;
       providerDisplayName = provider[1].displayName;
       providerKey = provider[0];
-      providerIcon = this.formatProviderName(providerDisplayName);
+      providerIcon = this._formatProviderName(providerDisplayName);
     }
 
     document.getElementById("cloudDownloadTitle").setAttribute("value", "Save downloads to " + providerDisplayName + "?");
@@ -245,18 +272,18 @@ var CloudDownloadsView = {
     panelCloudNotification.addEventListener("click", this);
   },
 
-  addRadioOption(key, providerName, document) {
+  _addRadioOption(key, providerName, document) {
     let option = document.createElement("radio");
     option.id = key;
     option.type = "radio";
 
     option.setAttribute("label", "Save to " + providerName);
-    option.setAttribute("provider", this.formatProviderName(providerName));
+    option.setAttribute("provider", this._formatProviderName(providerName));
     option.setAttribute("selected", false);
     return option;
   },
 
-  handleMultipleProviders(providersMap, document) {
+  _addNotificationMultipleProviders(providersMap, document) {
     let multiProviderSelect = document.getElementById("multiProviderSelect");
 
     let providers = [];
@@ -272,17 +299,27 @@ var CloudDownloadsView = {
 
     for (let provider of providers) {
       multiProviderSelect.appendChild(
-        this.addRadioOption(provider.key, provider.name, document));
+        this._addRadioOption(provider.key, provider.name, document));
     }
     multiProviderSelect.setAttribute("show", "true");
   },
 
-  iconURL(name) {
-   return new URL(this.stylesURL).origin + "/skin/" + this.formatProviderName(name) + ".svg";
+  _iconURL(name) {
+   return new URL(this.stylesURL).origin + "/skin/" + this._formatProviderName(name) + ".svg";
   },
 
-  displayMoveToCloudContextMenuItem(downloadElement) {
-    let aPopupMenu = RecentWindow.getMostRecentBrowserWindow().document.getElementById("downloadsContextMenu");
+  _listItemIndex(element) {
+    var children = element.parentNode.childNodes;
+    for (let i = 0; i < children.length; i++) {
+      if (children[i] == element) {
+        return i;
+      }
+    }
+    return -1;
+  },
+
+  _displayMoveToCloudContextMenuItem(downloadElement) {
+    let aPopupMenu = this.browserWindow.document.getElementById("downloadsContextMenu");
     let menuItem = aPopupMenu.getElementsByAttribute("id", "moveDownload")[0];
     if (menuItem) {
       menuItem.setAttribute("hidden", "true");
@@ -294,10 +331,9 @@ var CloudDownloadsView = {
         let provider = this.providers.entries().next().value;
         menuItem.setAttribute('label', 'Move to ' + provider[1].displayName);
         menuItem.setAttribute('key', provider[0]);
-        menuItem.setAttribute('source', downloadElement._shell.download.source.url);
-        menuItem.setAttribute('target', downloadElement._shell.download.target.path);
         menuItem.setAttribute("class", "menuitem-iconic");
-        menuItem.setAttribute("image", this.iconURL(provider[1].displayName));
+        menuItem.setAttribute("image", this._iconURL(provider[1].displayName));
+        menuItem.setAttribute("itemIndex", this._listItemIndex(downloadElement));
         menuItem.removeAttribute('hidden');
       }
     }
@@ -319,12 +355,15 @@ var CloudDownloadsView = {
       if (!element) {
         return;
       }
-      this.displayMoveToCloudContextMenuItem(element);
+      this._displayMoveToCloudContextMenuItem(element);
     }
 
     switch (event.target.id) {
       case "moveDownload":
-        // TBD: handle move download
+        console.log(event.target);
+        let key = event.target.getAttribute("key");
+        CloudDownloadsInternal.prefCloudProvider = { key: key, value: this.providers.get(key) };
+        CloudDownloadsInternal.handleMove(event.target);
         break;
       case "cloudDownloadSave":
         CloudStorage.savePromptResponse(event.target.getAttribute("key"), true, true);
@@ -339,12 +378,117 @@ var CloudDownloadsView = {
       case "cloudDownloadPreference":
         let origin = null;
         let entryPoint = "CloudStorage";
-        RecentWindow.getMostRecentBrowserWindow().openPreferences("paneGeneral",
-          {origin, urlParams: {entrypoint: entryPoint}});
+        this.browserWindow.openPreferences("paneGeneral", {origin, urlParams: {entrypoint: entryPoint}});
         break;
     }
   },
 };
+
+
+// Cloud Downloads Internal API that observe downloads and handle
+// downloaded item move once user selects Move to provider folder context menu option
+var CloudDownloadsInternal = {
+  /**
+   * Provider selected in context menu
+   */
+  prefCloudProvider: null,
+
+  /**
+   * Checks if the asset with input path exist on
+   * file system
+   * @return {Promise}
+   * @resolves
+   * boolean value of file existence check
+   */
+  checkIfAssetExists(path) {
+    return OS.File.exists(path).catch(err => {
+      Cu.reportError(`Couldn't check existance of ${path}`, err);
+      return false;
+    });
+  },
+
+  /**
+   * Moves downloaded item to provider download folder and adds
+   * moved file in provider folder as a download item in DownloadList
+   * object shown in user interface in Download Panel and Download History
+   *
+   * @param download
+   *        object representing a single download
+   * @param providerDwnldFldrPath
+   *        String with complete path of provider download folder
+   * @return {Promise} that resolves successfully once download is moved
+   *         to provider folder and movedDownload is added as download item
+   *         in DownloadList object
+   */
+
+  async _moveDownload(download, providerDwnldFldrPath) {
+    // String with complete original target path of download
+    let dwnldTargetPath = download.target.path;
+    let destPath = providerDwnldFldrPath ?
+      OS.Path.join(providerDwnldFldrPath, OS.Path.basename(dwnldTargetPath)) : "";
+
+    // Ensure destPath is a unique file
+    destPath = DownloadPaths.createNiceUniqueFile(new FileUtils.File(destPath)).path;
+
+    try {
+      await OS.File.move(dwnldTargetPath, destPath);
+    } catch (err) {
+      Cu.reportError(err);
+      return;
+    }
+
+    // Create a duplicate download which will show the correct
+    // target path for moved session download in Download UI panel
+    let publicList = await Downloads.getList(Downloads.ALL);
+
+    let movedDownload = await Downloads.createDownload({
+      source: download.source,
+      target: destPath
+    });
+    movedDownload.startTime = download.startTime;
+    movedDownload.succeeded = true;
+    await publicList.add(movedDownload);
+
+    // Update destination path used in download history library panel
+    PlacesUtils.annotations.setPageAnnotation(
+      NetUtil.newURI(download.source.url),
+      "downloads/destinationFileURI",
+      "file://" + destPath, 0,
+      PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+
+    // Explicitly updates the state of a moved download
+    movedDownload.refresh().catch(Cu.reportError);
+
+    // Remove original download in favor of moved download from download UI panel
+    await publicList.remove(download);
+  },
+
+  async handleMove(moveDownloadMenuItem) {
+    if (!this.prefCloudProvider) {
+      return;
+    }
+
+    // Compute provider download folder path from prefCloudProvider object
+    let providerDownloadFolder = OS.Path.join(this.prefCloudProvider.value.downloadPath,
+      this.prefCloudProvider.value.typeSpecificData["default"]);
+
+    // create download directory if it doesn't exist
+    try {
+      await OS.File.makeDir(providerDownloadFolder, {ignoreExisting: true});
+    } catch (err) {
+      Cu.reportError(err);
+      return;
+    }
+
+    let document = CloudDownloadsView.browserWindow.document;
+    let downloadItemElements = document.getElementById("downloadsListBox").childNodes;
+    let download = downloadItemElements[moveDownloadMenuItem.getAttribute("itemIndex")]._shell.download;
+    if (download.succeeded) {
+      await this._moveDownload(download, providerDownloadFolder);
+    }
+  },
+};
+
 
 var WindowListener = {
   setupBrowserUI: function wm_setupBrowserUI(window) {

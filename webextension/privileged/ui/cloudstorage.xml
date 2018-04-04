@@ -21,7 +21,6 @@
         // Read the src path from download type icon
         // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
         // and use it to highlight respective downloaded item with storage provider icon
-        //let downloadListItem = document.getAnonymousElementByAttribute(this, "type", "download")[0];
         this.setAttribute("cloudstorage","local");
 
         let parent = document.getAnonymousElementByAttribute(this, "class", "downloadMainArea").firstChild;
