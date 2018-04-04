@@ -69,8 +69,19 @@ var CloudDownloadsView = {
     // This is workaround to force initialize API for first time enter to
     // ensure getStorageProviders call returns successfully.
     await CloudStorage.getDownloadFolder();
-    this.providers = await CloudStorage.getStorageProviders();
+    let providers = await CloudStorage.getStorageProviders();
 
+    providers.forEach( async (value, key) => {
+      // Extension doesn't support Google Drive custom download paths. Delete
+      // provider if user has Google Drive Download folder set to folder
+      // different from <HOME>/Google Drive
+      let isExist = await CloudDownloadsInternal.checkIfAssetExists(value.downloadPath);
+      if (key === "GDrive" && !isExist) {
+        providers.delete(key);
+      }
+    });
+
+    this.providers = providers;
 
     // Continue only if cloud providers exists on user device
     if (this.providers.size === 0) {
@@ -362,7 +373,7 @@ var CloudDownloadsView = {
       case "moveDownload":
         console.log(event.target);
         let key = event.target.getAttribute("key");
-        CloudDownloadsInternal.prefCloudProvider = { key: key, value: this.providers.get(key) };
+        CloudDownloadsInternal.selectedProvider = { key: key, value: this.providers.get(key) };
         CloudDownloadsInternal.handleMove(event.target);
         break;
       case "cloudDownloadSave":
@@ -391,7 +402,7 @@ var CloudDownloadsInternal = {
   /**
    * Provider selected in context menu
    */
-  prefCloudProvider: null,
+  selectedProvider: null,
 
   /**
    * Checks if the asset with input path exist on
@@ -464,13 +475,13 @@ var CloudDownloadsInternal = {
   },
 
   async handleMove(moveDownloadMenuItem) {
-    if (!this.prefCloudProvider) {
+    if (!this.selectedProvider) {
       return;
     }
 
-    // Compute provider download folder path from prefCloudProvider object
-    let providerDownloadFolder = OS.Path.join(this.prefCloudProvider.value.downloadPath,
-      this.prefCloudProvider.value.typeSpecificData["default"]);
+    // Compute provider download folder path from selectedProvider object
+    let providerDownloadFolder = OS.Path.join(this.selectedProvider.value.downloadPath,
+      this.selectedProvider.value.typeSpecificData["default"]);
 
     // create download directory if it doesn't exist
     try {
