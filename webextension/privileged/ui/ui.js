@@ -24,8 +24,13 @@ this.ui = class extends ExtensionAPI {
           return path;
         },
         async setCloudStoragePref(isEnable) {
-          Services.prefs.setBoolPref("cloud.services.api.enabled", isEnable);
-          return "Pref Updated";
+          let isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
+          if (isAPIEnabled) {
+            await CloudDownloadsView.init();
+          } else {
+             Services.prefs.setBoolPref("cloud.services.api.enabled", isEnable);
+          }
+          return "API initialized";
         },
       }
     };
