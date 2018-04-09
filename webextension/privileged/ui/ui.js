@@ -13,7 +13,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 this.ui = class extends ExtensionAPI {
   getAPI(context) {
     const { CloudDownloadsView } = ChromeUtils.import(
-      context.extension.getURL("privileged/ui/CloudDownloadsView.jsm")
+      context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm")
     );
 
     return {
