@@ -18,19 +18,17 @@ this.ui = class extends ExtensionAPI {
 
     return {
       ui: {
-        async setStylesURL(path) {
+        async startup(path) {
           console.log(CloudDownloadsView);
           CloudDownloadsView.stylesURL = path;
-          return path;
-        },
-        async setCloudStoragePref(isEnable) {
+
           let isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
           if (isAPIEnabled) {
             await CloudDownloadsView.init();
           } else {
-             Services.prefs.setBoolPref("cloud.services.api.enabled", isEnable);
+             Services.prefs.setBoolPref("cloud.services.api.enabled", true);
           }
-          return "API initialized";
+          return path;
         },
       }
     };

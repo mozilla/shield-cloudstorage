@@ -4,26 +4,14 @@
     "description": "CloudAPI init",
     "functions": [
       {
-        "name": "setStylesURL",
+        "name": "startup",
         "type": "function",
-        "description": "Sets the value of a CSS path",
+        "description": "starts cloud storage extension",
         "async": true,
         "parameters": [
           {
             "name": "path",
             "type": "string"
-          }
-        ]
-      },
-      {
-        "name": "setCloudStoragePref",
-        "type": "function",
-        "description": "Sets the cloud storage pref",
-        "async": true,
-        "parameters": [
-          {
-            "name": "isEnable",
-            "type": "boolean"
           }
         ]
       }
