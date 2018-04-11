@@ -41,13 +41,6 @@ var CloudDownloadsView = {
     <hbox>
       <button id='cloudDownloadCancel' class='cloudNotificationButton'/>
       <button id='cloudDownloadSave' class='cloudNotificationButton' default='true'/>
-    </hbox>
-    <hbox id='syncSignIn' class='cloudDownloadSyncMessage'>
-      <label id='syncSignInLink' class='text-link'/>
-      <description id='cloudDownloadSignInText'/>
-    </hbox>
-    <hbox id='syncMessage' class='cloudDownloadSyncMessage'>
-      <description id='cloudDownloadSyncText'/>
     </hbox>`,
 
   get browserWindow() {
@@ -62,7 +55,7 @@ var CloudDownloadsView = {
     // Extension doesn't support Google Drive custom download paths. Delete
     // provider if user has Google Drive Download folder set to folder
     // different from <HOME>/Google Drive
-    const GDRIVE_KEY = 'GDrive';
+    const GDRIVE_KEY = "GDrive";
     let provider = providers.get(GDRIVE_KEY);
     if (provider) {
       let isExist = await CloudDownloadsInternal.checkIfAssetExists(provider.downloadPath);
@@ -96,38 +89,39 @@ var CloudDownloadsView = {
     if (!aPopupMenu) {
       return;
     }
-
+    // Get menuItem Copy Location, to insert skeleton move download option and a menu separator after it
     let menuItem = aPopupMenu.getElementsByAttribute("command", "downloadsCmd_copyLocation")[0];
-    if (menuItem) {
-      let fragment = browserWindow.document.createDocumentFragment();
-      let separator = browserWindow.document.createElement('menuseparator');
-      fragment.appendChild(separator);
-
-      if (this.providers.size > 1) {
-        let moveDownloadMenu = browserWindow.document.createElement("menu");
-        moveDownloadMenu.setAttribute('id', 'moveDownload');
-        moveDownloadMenu.setAttribute('hidden', 'true');
-        let moveDownloadMenuPopup = browserWindow.document.createElement("menupopup");
-        moveDownloadMenuPopup.setAttribute('id', 'moveDownloadSubMenu');
-        moveDownloadMenuPopup.setAttribute('hidden', 'true');
-
-        this.providers.forEach((value, key) => {
-          let moveDownloadItem = browserWindow.document.createElement('menuitem');
-          moveDownloadMenuPopup.appendChild(moveDownloadItem);
-        });
-
-        moveDownloadMenu.appendChild(moveDownloadMenuPopup);
-        fragment.appendChild(moveDownloadMenu);
-      } else {
-        // Add skeleton Move to menu item in context menu
-        let moveDownloadItem = browserWindow.document.createElement('menuitem');
-        moveDownloadItem.setAttribute('id', 'moveDownload');
-        moveDownloadItem.setAttribute('hidden', 'true');
-        fragment.appendChild(moveDownloadItem);
-      }
-      aPopupMenu.insertBefore(fragment, menuItem.nextSibling);
+    if (!menuItem) {
+      return;
     }
 
+    let fragment = browserWindow.document.createDocumentFragment();
+    let separator = browserWindow.document.createElement("menuseparator");
+    fragment.appendChild(separator);
+
+    if (this.providers.size > 1) {
+      let moveDownloadMenu = browserWindow.document.createElement("menu");
+      moveDownloadMenu.setAttribute("id", "moveDownload");
+      moveDownloadMenu.setAttribute("hidden", "true");
+      let moveDownloadMenuPopup = browserWindow.document.createElement("menupopup");
+      moveDownloadMenuPopup.setAttribute("id", "moveDownloadSubMenu");
+      moveDownloadMenuPopup.setAttribute("hidden", "true");
+
+      this.providers.forEach((value, key) => {
+        let moveDownloadItem = browserWindow.document.createElement("menuitem");
+        moveDownloadMenuPopup.appendChild(moveDownloadItem);
+      });
+
+      moveDownloadMenu.appendChild(moveDownloadMenuPopup);
+      fragment.appendChild(moveDownloadMenu);
+    } else {
+      // Add skeleton Move to menu item in context menu
+      let moveDownloadItem = browserWindow.document.createElement("menuitem");
+      moveDownloadItem.setAttribute("id", "moveDownload");
+      moveDownloadItem.setAttribute("hidden", "true");
+      fragment.appendChild(moveDownloadItem);
+    }
+    aPopupMenu.insertBefore(fragment, menuItem.nextSibling);
     aPopupMenu.addEventListener("click", this);
     let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
     dwnldsListBox.addEventListener("contextmenu", this);
@@ -144,8 +138,6 @@ var CloudDownloadsView = {
     let aPopupMenu = browserWindow.document.getElementById("downloadsContextMenu");
     aPopupMenu.removeEventListener("click", this);
     aPopupMenu.removeChild(moveDownloadMenuItem);
-
-    // TBD: Remove menuseperator
 
     let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
     dwnldsListBox.removeEventListener("contextmenu", this);
@@ -187,7 +179,6 @@ var CloudDownloadsView = {
     let windows = Services.wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
       let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
-
       WindowListener.tearDownBrowserUI(domWindow);
     }
     // Stop listening for any new browser windows to open
@@ -265,8 +256,8 @@ var CloudDownloadsView = {
                           document.documentElement);
 
     let fragment = document.createDocumentFragment();
-    panelCloudNotification = document.createElement('vbox');
-    panelCloudNotification.setAttribute('id', 'panelCloudNotification');
+    panelCloudNotification = document.createElement("vbox");
+    panelCloudNotification.setAttribute("id", "panelCloudNotification");
     panelCloudNotification.unsafeSetInnerHTML(this.notificationHTML);
     fragment.appendChild(panelCloudNotification);
     panelDownload.prepend(fragment);
@@ -289,7 +280,7 @@ var CloudDownloadsView = {
 
     let cloudDownloadSave = document.getElementById("cloudDownloadSave");
     cloudDownloadSave.setAttribute("label", "Save to " + providerDisplayName);
-    cloudDownloadSave.setAttribute("key", providerKey);
+    cloudDownloadSave.setAttribute("providerKey", providerKey);
 
     if (providerIcon === CLOUD_PROVIDER_DEFAULT_ICON) {
       cloudDownloadSave.setAttribute("disabled", true);
@@ -335,6 +326,9 @@ var CloudDownloadsView = {
   },
 
   _iconURL(name) {
+   if (this._formatProviderName(name) === "localdownload") {
+      return "moz-icon://" + CloudDownloadsInternal.defaultDownloadDirIconURL + "?size=16";
+   }
    return new URL(this.stylesURL).origin + "/skin/" + this._formatProviderName(name) + ".svg";
   },
 
@@ -349,15 +343,23 @@ var CloudDownloadsView = {
   },
 
   _setMenuItemAttributes(menuItem, providerKey, providerDetail, downloadElement) {
-    menuItem.setAttribute('label', providerDetail.displayName);
-    menuItem.setAttribute('key', providerKey); // TBD update attribute name 'key'
+    menuItem.setAttribute("label", providerDetail.displayName);
+    menuItem.setAttribute("providerKey", providerKey);
     menuItem.setAttribute("class", "menuitem-iconic");
     menuItem.setAttribute("image", this._iconURL(providerDetail.displayName));
     menuItem.setAttribute("itemIndex", this._listDownloadItemIndex(downloadElement));
     return menuItem;
   },
 
-  _displayMoveToCloudContextMenuItem(downloadElement) {
+  _setMoveDownloadMenuPopUpAttributes(menuItem) {
+    menuItem.setAttribute("label", "Move Download To...");
+    menuItem.removeAttribute("hidden");
+    let menuPopup = menuItem.menupopup;
+    menuPopup.removeAttribute("hidden");
+    return menuPopup.firstChild;
+  },
+
+  async _displayMoveToCloudContextMenuItem(downloadElement) {
     let aPopupMenu = this.browserWindow.document.getElementById("downloadsContextMenu");
     let menuItem = aPopupMenu.getElementsByAttribute("id", "moveDownload")[0];
     if (menuItem) {
@@ -369,47 +371,42 @@ var CloudDownloadsView = {
       }
 
       let downloadType = downloadElement._shell.element.getAttribute("cloudstorage");
+      // Downloaded Item is saved in local download folder
       if (downloadType === "local") {
         if (this.providers.size > 1) {
-          menuItem.setAttribute('label', 'Move Download To...');
-          menuItem.removeAttribute('hidden');
-          let menuPopup = menuItem.menupopup;
-          menuPopup.removeAttribute('hidden');
-
-          let subMenuItem =  menuPopup.firstChild;
-
+          let subMenuItem =  this._setMoveDownloadMenuPopUpAttributes(menuItem);
           this.providers.forEach((value, key) => {
             subMenuItem = this._setMenuItemAttributes(subMenuItem, key, value, downloadElement);
             subMenuItem = subMenuItem.nextSibling;
           });
         } else {
-          // move to first provider available
+          // Display available provider as context menu option
           let provider = this.providers.entries().next().value;
           menuItem = this._setMenuItemAttributes(menuItem, provider[0], provider[1], downloadElement);
-          menuItem.setAttribute('label', 'Move To ' + provider[1].displayName);
-          menuItem.removeAttribute('hidden');
+          menuItem.setAttribute("label", "Move To " + provider[1].displayName);
+          menuItem.removeAttribute("hidden");
         }
       } else {
+        // Downloaded Item is saved in cloud storage provider folder
+
+        // Find local prefereed download directory path
+        // to display correct icon in Local Download context menu option
+        await CloudDownloadsInternal._setDefaultDownloadDirIconURL();
+
         // Display context menus for download saved in cloud provider folder
         if (this.providers.size > 1) {
-          menuItem.setAttribute('label', 'Move Download To...');
-          menuItem.removeAttribute('hidden');
-          let menuPopup = menuItem.menupopup;
-          menuPopup.removeAttribute('hidden');
-
-          let subMenuItem =  menuPopup.firstChild;
-
+          let subMenuItem =  this._setMoveDownloadMenuPopUpAttributes(menuItem);
           this.providers.forEach((value, key) => {
             if (this._formatProviderName(value.displayName) !== downloadType) {
               subMenuItem = this._setMenuItemAttributes(subMenuItem, key, value, downloadElement);
               subMenuItem = subMenuItem.nextSibling;
             }
           });
-          subMenuItem = this._setMenuItemAttributes(subMenuItem, 'local', {displayName: 'Local Download'}, downloadElement);
+          subMenuItem = this._setMenuItemAttributes(subMenuItem, "local", {displayName: "Local Download"}, downloadElement);
         } else {
-          menuItem = this._setMenuItemAttributes(menuItem, 'local', {displayName: 'Local Download'}, downloadElement);
-          menuItem.setAttribute('label', 'Move To Local Download');
-          menuItem.removeAttribute('hidden');
+          menuItem = this._setMenuItemAttributes(menuItem, "local", {displayName: "Local Download"}, downloadElement);
+          menuItem.setAttribute("label", "Move To Local Download");
+          menuItem.removeAttribute("hidden");
         }
       }
     }
@@ -420,7 +417,7 @@ var CloudDownloadsView = {
     if (event.target.parentElement.id === "multiProviderSelect") {
       let cloudDownloadSave = event.currentTarget.children[1].children.cloudDownloadSave;
       cloudDownloadSave.setAttribute("label", event.target.label);
-      cloudDownloadSave.setAttribute("key", event.target.id); // TBD: rename attribute key
+      cloudDownloadSave.setAttribute("providerKey", event.target.id);
       cloudDownloadSave.removeAttribute("disabled");
       return;
     }
@@ -435,8 +432,8 @@ var CloudDownloadsView = {
     }
 
     if (event.target.id === "moveDownload" || event.target.parentElement.id === "moveDownloadSubMenu") {
-      let key = event.target.getAttribute("key");
-      if (key === 'local') {
+      let key = event.target.getAttribute("providerKey");
+      if (key === "local") {
         CloudDownloadsInternal.handleLocalMove(event.target);
       } else {
         CloudDownloadsInternal.selectedProvider = { key: key, value: this.providers.get(key) };
@@ -447,7 +444,7 @@ var CloudDownloadsView = {
 
     switch (event.target.id) {
       case "cloudDownloadSave":
-        CloudStorage.savePromptResponse(event.target.getAttribute("key"), true, true);
+        CloudStorage.savePromptResponse(event.target.getAttribute("providerKey"), true, true);
         event.currentTarget.removeAttribute("show");
         break;
       case "cloudDownloadCancel":
@@ -475,6 +472,11 @@ var CloudDownloadsInternal = {
   selectedProvider: null,
 
   /**
+    * Icon URL shown before default Local Download Dir in context menu
+    */
+  defaultDownloadDirIconURL: null,
+
+  /**
    * Checks if the asset with input path exist on
    * file system
    * @return {Promise}
@@ -486,6 +488,16 @@ var CloudDownloadsInternal = {
       Cu.reportError(`Couldn't check existance of ${path}`, err);
       return false;
     });
+  },
+
+  async _setDefaultDownloadDirIconURL() {
+    let downloadsDir = await Downloads.getPreferredDownloadsDirectory();
+
+    // Used in defining the correct path to the folder icon.
+    let fph = Services.io.getProtocolHandler("file")
+      .QueryInterface(Ci.nsIFileProtocolHandler);
+
+    this.defaultDownloadDirIconURL = fph.getURLSpecFromFile(new FileUtils.File(downloadsDir));
   },
 
   /**

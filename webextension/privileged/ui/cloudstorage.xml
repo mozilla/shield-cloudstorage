@@ -46,27 +46,4 @@
       ]]></constructor>
       </implementation>
   </binding>
-
-  <binding id="cloud-storage-subview"
-           extends="chrome://browser/content/downloads/download.xml#download-subview-toolbarbutton">
-    <implementation>
-      <method name="checkProviderSubView">
-        <parameter name="provider"/>
-        <body><![CDATA[
-          let downloadTypeIcon = document.getAnonymousElementByAttribute(this, "class", "toolbarbutton-icon");
-          let src = downloadTypeIcon.getAttribute("src").toLowerCase();
-          if (src.indexOf(provider) >= 0) {
-            return provider;
-          }
-        ]]></body>
-      </method>
-      <constructor><![CDATA[
-        // Read the src path from download type icon
-        // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
-        // and use it to highlight respective downloaded item with storage provider icon
-        //let parent = document.getAnonymousElementByAttribute(this, "class", "subviewbutton");
-
-      ]]></constructor>
-      </implementation>
-  </binding>
 </bindings>

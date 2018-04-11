@@ -20,10 +20,6 @@ richlistitem.download[active] {
   -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
 }
 
-.subviewbutton.download {
-  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage-subview") !important;
-}
-
 .dropbox {
   margin: 0 5px;
   background: url("/skin/dropbox.svg") top right / 16px no-repeat;
@@ -125,10 +121,6 @@ richlistitem.download[active] {
 
 .cloudNotificationButton[default]:hover:not([disabled]) {
     background-color: #003eaa;
-}
-
-.cloudDownloadSyncMessage:not([show]) {
-  display: none;
 }
 
 #moveDownload[hidden="true"] + menuseparator {
