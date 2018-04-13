@@ -16,12 +16,12 @@
     "./skin/download.svg"
   ],
   "experiment_apis": {
-    "ui": {
+    "cloudstorage": {
       "schema": "./privileged/ui/schema.json",
       "parent": {
         "scopes": ["addon_parent"],
-        "script": "./privileged/ui/ui.js",
-        "paths": [["ui"]]
+        "script": "./privileged/ui/cloudstorage.js",
+        "paths": [["cloudstorage"]]
       }
     }
   }

@@ -1,5 +1,5 @@
 try {
-  browser.ui.startup(browser.runtime.getURL("./skin/clouddownloads.css")).then(
+  browser.cloudstorage.init(browser.runtime.getURL("./skin/clouddownloads.css")).then(
 	  result => {
 	    console.log(result);
 	  }

@@ -1,10 +1,10 @@
 [
   {
-    "namespace": "ui",
-    "description": "CloudAPI init",
+    "namespace": "cloudstorage",
+    "description": "Cloud Storage API init",
     "functions": [
       {
-        "name": "startup",
+        "name": "init",
         "type": "function",
         "description": "starts cloud storage extension",
         "async": true,

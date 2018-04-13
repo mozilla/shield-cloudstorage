@@ -10,15 +10,15 @@
 "use strict";
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-this.ui = class extends ExtensionAPI {
+this.cloudstorage = class extends ExtensionAPI {
   getAPI(context) {
     const { CloudDownloadsView } = ChromeUtils.import(
       context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm")
     );
 
     return {
-      ui: {
-        async startup(path) {
+      cloudstorage: {
+        async init(path) {
           console.log(CloudDownloadsView);
           CloudDownloadsView.stylesURL = path;
 
