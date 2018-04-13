@@ -26,7 +26,9 @@ this.ui = class extends ExtensionAPI {
           if (isAPIEnabled) {
             await CloudDownloadsView.init();
           } else {
-             Services.prefs.setBoolPref("cloud.services.api.enabled", true);
+            let interval = 0; // TBD: Interval to be picked from Study Utils Config
+            Services.prefs.setBoolPref("cloud.services.api.enabled", true);
+            Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }
           return path;
         },

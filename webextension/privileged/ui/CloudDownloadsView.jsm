@@ -219,10 +219,30 @@ var CloudDownloadsView = {
       return;
     }
 
+    let providersMap = this.providers;
+
+    // Continue only if cloud providers exists on user device
+    if (providersMap.size === 0) {
+      return;
+    }
+
     // Check if user had already opted-in or
     // enough time has passed since last prompts shown
-    // TBD: optimize by implementing lastpromptshown check, getPreferredProvider from cloud storage
     if (!await CloudStorage.promisePromptInfo()) {
+      return;
+    }
+
+    // Check if user has previously set preferred download directoy path as
+    // one of cloud provider folder, if yes exit without showing notification
+    // TBD: Telemetry - how many such users
+    let dwnldDirPath = await Downloads.getPreferredDownloadsDirectory();
+    let hasExistingCloudDwnldDir = false;
+    providersMap.forEach((value, key) => {
+      if (dwnldDirPath.includes(value.downloadPath)) {
+        hasExistingCloudDwnldDir = true;
+      }
+    });
+    if (hasExistingCloudDwnldDir) {
       return;
     }
 
@@ -234,15 +254,6 @@ var CloudDownloadsView = {
       return;
     }
 
-    let providersMap = this.providers;
-
-    // Continue only if cloud providers exists on user device
-    if (providersMap.size === 0) {
-      return;
-    }
-
-    // TBD: check if user has browser.download.dir set to one of the default download paths
-    // If yes don't continue
     let providerDisplayName = null;
     let providerIcon = null;
     let providerKey = null;
@@ -444,8 +455,10 @@ var CloudDownloadsView = {
 
     switch (event.target.id) {
       case "cloudDownloadSave":
-        CloudStorage.savePromptResponse(event.target.getAttribute("providerKey"), true, true);
-        event.currentTarget.removeAttribute("show");
+        if (!event.target.getAttribute("disabled")) {
+          CloudStorage.savePromptResponse(event.target.getAttribute("providerKey"), true, true);
+          event.currentTarget.removeAttribute("show");
+        }
         break;
       case "cloudDownloadCancel":
         // Set interval when notification was last shown
