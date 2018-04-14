@@ -3,7 +3,7 @@ Cloud storage Shield Study WebExtension Experiment
 
 ## Setup
 
-1. Get a Firefox 59+
+1. Get a Firefox 60+
 2. Install
 
   ```
@@ -26,16 +26,21 @@ Cloud storage Shield Study WebExtension Experiment
 
 1. Click on Download link shows notification asking user to opt-in to cloud storage
 2. Result expected with different options selected in notification
-* Save to provider app -  Save all subsequent download to provider local download folder e.g. ~/Dropbox/Downloads
+* Save to provider app -  Save all subsequent download to provider local download folder e.g. ~/Dropbox/Downloads. This sets 'cloud.services.storage.key' pref to provider key and 'browser.download.folderList' pref to value 3. In about:prefernces under Downloads a third radio option displays indicating user opted-in setting.
+
 * Not Now - Closes Notification to be shown after a configurable interval
 
 3. cloud.services.prompt.interval pref sets the interval at which user should be prompted again.
 
-4. Downloaded item in cloud provider folder will be marked with provider icon in Download history
+4. Downloaded item in cloud provider folder will be marked with provider icon in Download history shown in Download panel and Tools -> Downloads
 
-5. TBD: For default downloads, selecting option 'Move to <provider>' moves download in provider folder
+5. For system default downloads in download panel, selecting context menu option 'Move to <provider>' moves download in provider folder
+
+## Telemetry
+* TBD
 
 ## Helpful links
 * [Bug 1441949](https://bugzilla.mozilla.org/show_bug.cgi?id=1441949)
 * [Bug 1447521](https://bugzilla.mozilla.org/show_bug.cgi?id=1447521)
 * [Bug 1450016](https://bugzilla.mozilla.org/show_bug.cgi?id=1450016)
+* [Mockups](https://mozilla.invisionapp.com/share/PKFN61KFZ25#/screens/290895622)

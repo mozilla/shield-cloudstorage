@@ -1,5 +1,5 @@
 {
-  "name": "CloudStorage-WebExtension-shield-study",
+  "name": "cloudstorage-webextensionExperiment@shield.mozilla.org",
   "applications": {
     "gecko": { "id": "cloudstorage-webextensionExperiment@shield.mozilla.org" }
   },
@@ -8,6 +8,7 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "permissions": ["management"],
   "web_accessible_resources": [
     "./privileged/ui/cloudstorage.xml",
     "./skin/clouddownloads.css",

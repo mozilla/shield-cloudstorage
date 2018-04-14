@@ -51,7 +51,7 @@ var CloudDownloadsView = {
     return name.toLowerCase().replace(" ", "");
   },
 
-  async _filterMap(providers) {
+  async _filterProvidersMap(providers) {
     // Extension doesn't support Google Drive custom download paths. Delete
     // provider if user has Google Drive Download folder set to folder
     // different from <HOME>/Google Drive
@@ -78,7 +78,7 @@ var CloudDownloadsView = {
     // ensure getStorageProviders call returns successfully.
     await CloudStorage.getDownloadFolder();
     let providers = await CloudStorage.getStorageProviders();
-    this.providers = await this._filterMap(providers);
+    this.providers = await this._filterProvidersMap(providers);
 
     // Continue only if cloud providers exists on user device
     if (this.providers.size === 0) {
@@ -143,7 +143,7 @@ var CloudDownloadsView = {
     dwnldsListBox.removeEventListener("contextmenu", this);
   },
 
-  async registerNotification() {
+  registerNotification() {
     Services.obs.addObserver(this.observe, "cloudstorage-prompt-notification");
     this.isInitialized = true;
   },
@@ -189,13 +189,13 @@ var CloudDownloadsView = {
     if (!this.gIsAPIEnabled) {
       if (this.isInitialized) {
         this.unRegisterNotification();
-        this.unRegisterContextMenu();
         this.uninitWindowListener();
+        this.unRegisterContextMenu();
       }
       return;
     }
+    this.registerNotification();
     this.initWindowListener();
-    await this.registerNotification();
     await this.registerContextMenu();
   },
 
@@ -311,7 +311,6 @@ var CloudDownloadsView = {
 
     option.setAttribute("label", "Save to " + providerName);
     option.setAttribute("provider", this._formatProviderName(providerName));
-    option.setAttribute("selected", false);
     return option;
   },
 
