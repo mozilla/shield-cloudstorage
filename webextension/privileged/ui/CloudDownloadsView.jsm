@@ -455,7 +455,12 @@ var CloudDownloadsView = {
     switch (event.target.id) {
       case "cloudDownloadSave":
         if (!event.target.getAttribute("disabled")) {
-          CloudStorage.savePromptResponse(event.target.getAttribute("providerKey"), true, true);
+          let key = event.target.getAttribute("providerKey");
+          CloudStorage.savePromptResponse(key, true, true);
+          CloudDownloadsInternal.selectedProvider = { key: key, value: this.providers.get(key) };
+          // Invoke handleMove to prepare future downloads move to Download Folder by checking
+          // if Download folder exists in cloud provider folder, if not create one
+          CloudDownloadsInternal.handleMove();
           event.currentTarget.removeAttribute("show");
         }
         break;
@@ -582,6 +587,11 @@ var CloudDownloadsInternal = {
       await OS.File.makeDir(providerDownloadFolder, {ignoreExisting: true});
     } catch (err) {
       Cu.reportError(err);
+      return;
+    }
+
+    // Check if there is a download item to be moved to provider folder, if not exit
+    if (!moveDownloadMenuItem) {
       return;
     }
 
