@@ -32,6 +32,10 @@ this.cloudstorage = class extends ExtensionAPI {
           }
           return path;
         },
+
+        async uninit() {
+          Services.prefs.setBoolPref("cloud.services.api.enabled", false);
+        },
       }
     };
   }
