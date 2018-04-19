@@ -39,8 +39,8 @@ var CloudDownloadsView = {
       </vbox>
     </hbox>
     <hbox>
-      <button id='cloudDownloadCancel' class='cloudNotificationButton'/>
-      <button id='cloudDownloadSave' class='cloudNotificationButton' default='true'/>
+      <button id='cloudDownloadCancel' />
+      <button id='cloudDownloadSave' default='true'/>
     </hbox>`,
 
   get browserWindow() {
@@ -66,9 +66,7 @@ var CloudDownloadsView = {
     return providers;
   },
 
-  async registerContextMenu() {
-    let browserWindow = this.browserWindow;
-
+  async registerContextMenu(browserWindow) {
     if (!browserWindow || !browserWindow.document) {
       return;
     }
@@ -89,6 +87,7 @@ var CloudDownloadsView = {
     if (!aPopupMenu) {
       return;
     }
+
     // Get menuItem Copy Location, to insert skeleton move download option and a menu separator after it
     let menuItem = aPopupMenu.getElementsByAttribute("command", "downloadsCmd_copyLocation")[0];
     if (!menuItem) {
@@ -166,12 +165,18 @@ var CloudDownloadsView = {
     panelDownload.removeChild(panelCloudNotification);
   },
 
-  initWindowListener() {
+  async initWindowListener() {
     // Get the list of browser windows already open
     let windows = Services.wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
       let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
       WindowListener.setupBrowserUI(domWindow);
+      // Exit if moveDownload Context Menu option is created by another window after adding event listeners??
+      let moveDownloadMenuItem = domWindow.document.getElementById("moveDownload");
+      if (moveDownloadMenuItem) {
+        return;
+      }
+      await this.registerContextMenu(domWindow);
     }
 
     // Wait for any new browser windows to open
@@ -184,6 +189,7 @@ var CloudDownloadsView = {
     while (windows.hasMoreElements()) {
       let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
       WindowListener.tearDownBrowserUI(domWindow);
+      this.unRegisterContextMenu();
     }
     // Stop listening for any new browser windows to open
     Services.wm.removeListener(WindowListener);
@@ -194,13 +200,11 @@ var CloudDownloadsView = {
       if (this.isInitialized) {
         this.unRegisterNotification();
         this.uninitWindowListener();
-        this.unRegisterContextMenu();
       }
       return;
     }
+    await this.initWindowListener();
     this.registerNotification();
-    this.initWindowListener();
-    await this.registerContextMenu();
   },
 
   async observe(subject, topic, data) {
@@ -633,11 +637,16 @@ var WindowListener = {
                              .getInterface(Ci.nsIDOMWindow);
 
     // Wait for it to finish loading
-    domWindow.addEventListener("load", function listener() {
+    domWindow.addEventListener("load", async function listener() {
       // If this is a browser window or places library window then setup its UI
       if (domWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ||
           domWindow.document.documentElement.getAttribute("windowtype") == "Places:Organizer" ) {
         WindowListener.setupBrowserUI(domWindow);
+        let moveDownloadMenuItem = domWindow.document.getElementById("moveDownload");
+        if (moveDownloadMenuItem) {
+          return;
+        }
+        await CloudDownloadsView.registerContextMenu(domWindow);
       }
     }, {once: true});
   },
