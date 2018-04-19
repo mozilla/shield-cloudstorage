@@ -97,6 +97,7 @@ var CloudDownloadsView = {
 
     let fragment = browserWindow.document.createDocumentFragment();
     let separator = browserWindow.document.createElement("menuseparator");
+    separator.setAttribute("id", "moveDownloadSeparator");
     fragment.appendChild(separator);
 
     if (this.providers.size > 1) {
@@ -138,6 +139,9 @@ var CloudDownloadsView = {
     let aPopupMenu = browserWindow.document.getElementById("downloadsContextMenu");
     aPopupMenu.removeEventListener("click", this);
     aPopupMenu.removeChild(moveDownloadMenuItem);
+
+    let moveDownloadSeparator = browserWindow.document.getElementById("moveDownloadSeparator");
+    aPopupMenu.removeChild(moveDownloadSeparator);
 
     let dwnldsListBox = browserWindow.document.getElementById("downloadsListBox");
     dwnldsListBox.removeEventListener("contextmenu", this);
@@ -258,13 +262,6 @@ var CloudDownloadsView = {
     let providerIcon = null;
     let providerKey = null;
     let document = browserWindow.document;
-    let contentStylesheet = document.createProcessingInstruction(
-      "xml-stylesheet",
-      'href="' + this.stylesURL + '" type="text/css"'
-      );
-
-    document.insertBefore(contentStylesheet,
-                          document.documentElement);
 
     let fragment = document.createDocumentFragment();
     panelCloudNotification = document.createElement("vbox");
@@ -275,7 +272,7 @@ var CloudDownloadsView = {
 
     if (providersMap.size > 1 ) {
       this._addNotificationMultipleProviders(providersMap, document);
-      providerDisplayName = "cloud storage";
+      providerDisplayName = "Cloud Storage";
       providerIcon = CLOUD_PROVIDER_DEFAULT_ICON;
     } else {
       let provider = providersMap.entries().next().value;

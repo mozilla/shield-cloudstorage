@@ -16,10 +16,28 @@ this.cloudstorage = class extends ExtensionAPI {
       context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm")
     );
 
+    function cleanUpPrefs() {
+      // Ensure cloud storage study related prefs are cleared
+      const CLOUD_SERVICES_PREF = "cloud.services.";
+      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "lastprompt");
+      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
+      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
+      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "api.enabled");
+    }
+
+    context.extension.callOnClose({
+        close: () => {
+          if (context.extension.shutdownReason == "ADDON_UNINSTALL" ||
+              context.extension.shutdownReason == "ADDON_DISABLE") {
+            Services.prefs.setBoolPref("cloud.services.api.enabled", false);
+            cleanUpPrefs();
+          }
+        },
+    });
+
     return {
       cloudstorage: {
         async init(path) {
-          console.log(CloudDownloadsView);
           CloudDownloadsView.stylesURL = path;
 
           let isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);

@@ -45,6 +45,10 @@ richlistitem.download[active] {
   margin-right: 0px;
 }
 
+#cloudDownloadDetail {
+  margin-inline-end: 0px !important;
+}
+
 #cloudDownloadTypeIcon {
   margin-inline-end: 5px;
   margin-top: 5px;
@@ -73,13 +77,13 @@ richlistitem.download[active] {
 }
 
 #multiProviderSelect radio {
+  -moz-appearance: none !important;
   min-width: 16px;
-  -moz-appearance: none;
   height: 16px;
 }
 
 #multiProviderSelect .radio-icon {
-  margin-inline-end: 6px;
+  margin-inline-end: 6px !important;
   width: 16px;
   margin-inline-start: 6px;
   height: 16px;
@@ -93,34 +97,34 @@ richlistitem.download[active] {
   list-style-image: url("/skin/googledrive.svg");
 }
 
-.cloudNotificationButton {
-  -moz-appearance: none;
+#panelCloudNotification button {
+  -moz-appearance: none !important;
   flex: 1;
   border: none;
   background-color: #e4e4e4;
-  color: #0c0c0d;
+  color: #0c0c0d !important;
   border-radius: 2px;
   font-size: 11px;
-  min-width: 210px;
+  min-width: 210px !important;
   height: 32px;
-  margin: 5px 5px 10px 0;
+  margin: 5px 5px 10px 0 !important;
 }
 
-.cloudNotificationButton[default] {
-  color: #ffffff;
-  background-color: #0060df;
+#panelCloudNotification button[default] {
+  color: #ffffff !important;
+  background-color: #0060df !important;
 }
 
-.cloudNotificationButton[disabled] {
+#panelCloudNotification button[disabled] {
   opacity: 0.4;
 }
 
-.cloudNotificationButton:hover:not([disabled]) {
-    background-color: rgba(12, 12, 13, 0.2);
+#panelCloudNotification button:hover:not([disabled]) {
+    background-color: rgba(12, 12, 13, 0.2) !important;
 }
 
-.cloudNotificationButton[default]:hover:not([disabled]) {
-    background-color: #003eaa;
+#panelCloudNotification button[default]:hover:not([disabled]) {
+    background-color: #003eaa !important;
 }
 
 #moveDownload[hidden="true"] + menuseparator {
