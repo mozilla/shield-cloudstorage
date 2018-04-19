@@ -1,12 +1,16 @@
 {
   "name": "cloud-storage-shield-study-webextension-experiment",
-  "version": "1.0.0",
   "description": "Cloud Storage Shield study as WebExtension Experiments",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "1.0.0",
+  "author": "Mozilla (https://mozilla.org/)",
+  "devDependencies": {
+    "web-ext": "2.6.0"
   },
   "keywords": [],
-  "author": "",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "private": "true",
+  "scripts": {
+    "firefox": "web-ext run -s webextension -f nightly",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }
