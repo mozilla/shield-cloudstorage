@@ -346,7 +346,7 @@ var CloudDownloadsView = {
    if (this._formatProviderName(name) === "localdownload") {
       return "moz-icon://" + CloudDownloadsInternal.defaultDownloadDirIconURL + "?size=16";
    }
-   return new URL(this.stylesURL).origin + "/skin/" + this._formatProviderName(name) + ".svg";
+   return new this.browserWindow.URL(this.stylesURL).origin + "/skin/" + this._formatProviderName(name) + ".svg";
   },
 
   _listDownloadItemIndex(element) {

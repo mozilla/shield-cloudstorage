@@ -18,21 +18,19 @@ this.cloudstorage = class extends ExtensionAPI {
 
     function cleanUpPrefs() {
       // Ensure cloud storage study related prefs are cleared
-      const CLOUD_SERVICES_PREF = "cloud.services.";
-      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "lastprompt");
-      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "interval.prompt");
-      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "storage.key");
-      Services.prefs.clearUserPref(CLOUD_SERVICES_PREF + "api.enabled");
+      ["lastprompt", "interval.prompt", "storage.key", "api.enabled"].forEach(pref => {
+        Services.prefs.clearUserPref(`cloud.services.${pref}`);
+      });
     }
 
     context.extension.callOnClose({
-        close: () => {
-          if (context.extension.shutdownReason == "ADDON_UNINSTALL" ||
-              context.extension.shutdownReason == "ADDON_DISABLE") {
-            Services.prefs.setBoolPref("cloud.services.api.enabled", false);
-            cleanUpPrefs();
-          }
-        },
+      close: () => {
+        if (context.extension.shutdownReason == "ADDON_UNINSTALL" ||
+            context.extension.shutdownReason == "ADDON_DISABLE") {
+          Services.prefs.setBoolPref("cloud.services.api.enabled", false);
+          cleanUpPrefs();
+        }
+      },
     });
 
     return {
@@ -49,10 +47,6 @@ this.cloudstorage = class extends ExtensionAPI {
             Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }
           return path;
-        },
-
-        async uninit() {
-          Services.prefs.setBoolPref("cloud.services.api.enabled", false);
         },
       }
     };

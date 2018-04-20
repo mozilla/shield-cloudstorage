@@ -14,13 +14,6 @@
             "type": "string"
           }
         ]
-      },
-      {
-        "name": "uninit",
-        "type": "function",
-        "description": "uninit cloud storage extension",
-        "async": true,
-        "parameters": []
       }
     ]
   }
