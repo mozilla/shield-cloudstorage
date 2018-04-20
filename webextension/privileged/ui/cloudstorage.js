@@ -25,8 +25,8 @@ this.cloudstorage = class extends ExtensionAPI {
 
     context.extension.callOnClose({
       close: () => {
-        if (context.extension.shutdownReason == "ADDON_UNINSTALL" ||
-            context.extension.shutdownReason == "ADDON_DISABLE") {
+        if (context.extension.shutdownReason === "ADDON_UNINSTALL" ||
+            context.extension.shutdownReason === "ADDON_DISABLE") {
           Services.prefs.setBoolPref("cloud.services.api.enabled", false);
           cleanUpPrefs();
         }
@@ -38,11 +38,11 @@ this.cloudstorage = class extends ExtensionAPI {
         async init(path) {
           CloudDownloadsView.stylesURL = path;
 
-          let isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
+          const isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
           if (isAPIEnabled) {
             await CloudDownloadsView.init();
           } else {
-            let interval = 0; // TBD: Interval to be picked from Study Utils Config
+            const interval = 0; // TBD: Interval to be picked from Study Utils Config
             Services.prefs.setBoolPref("cloud.services.api.enabled", true);
             Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }

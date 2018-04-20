@@ -3,14 +3,33 @@
   "description": "Cloud Storage Shield study as WebExtension Experiments",
   "version": "1.0.0",
   "author": "Mozilla (https://mozilla.org/)",
+  "bugs": {
+    "url": "https://github.com/mozilla/shield-cloudstorage/issues"
+  },
+  "dependencies": {},
   "devDependencies": {
+    "eslint": "4.19.1",
+    "eslint-plugin-json": "1.2.0",
+    "eslint-plugin-mozilla": "0.10.0",
+    "eslint-plugin-no-unsanitized": "3.0.0",
+    "npm-run-all": "4.1.2",
+    "stylelint": "9.2.0",
+    "stylelint-config-recommended": "2.1.0",
     "web-ext": "2.6.0"
   },
+  "homepage": "https://github.com/mozilla/shield-cloudstorage#readme",
   "keywords": [],
   "license": "MPL-2.0",
   "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozilla/shield-cloudstorage.git"
+  },
   "scripts": {
-    "firefox": "web-ext run -s webextension -f firefox",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "firefox": "web-ext run -s webextension -f nightly",
+    "lint": "npm-run-all lint:*",
+    "lint:css": "stylelint 'webextension/skin/*.css'",
+    "lint:js": "eslint webextension --ext=js,json,jsm",
+    "test": "npm run lint"
   }
 }

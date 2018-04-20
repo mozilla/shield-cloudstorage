@@ -47,6 +47,7 @@ richlistitem.download[active] {
 
 #cloudDownloadDetail {
   margin-inline-end: 0px !important;
+  opacity: var(--downloads-item-details-opacity);
 }
 
 #cloudDownloadTypeIcon {
@@ -54,9 +55,6 @@ richlistitem.download[active] {
   margin-top: 5px;
   width: 32px;
   height: 32px;
-}
-
-#cloudDownloadTypeIcon {
   background: var(--provider-icon) top right / 32px no-repeat;
 }
 
@@ -66,10 +64,6 @@ richlistitem.download[active] {
 
 #cloudDownloadTitle {
   font-weight: 500;
-}
-
-#cloudDownloadDetail {
-  opacity: var(--downloads-item-details-opacity);
 }
 
 #multiProviderSelect:not([show]) {
