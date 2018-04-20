@@ -3,12 +3,12 @@ Cloud storage Shield Study WebExtension Experiment
 
 ## Setup
 
-1. Get a Firefox 60+
+1. Get Firefox beta 60
 2. Install
 
   ```
   npm install -g web-ext  # just make it global!
-  web-ext run --firefox=/Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
+  npm run firefox
   ```
 
 ## pre-requisite
