@@ -4,6 +4,6 @@ try {
       console.log(result);
     }
   );
-} catch(e) {
+} catch (e) {
   console.log(e);
 }
