@@ -171,7 +171,6 @@ var CloudDownloadsView = {
     while (windows.hasMoreElements()) {
       let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
       WindowListener.setupBrowserUI(domWindow);
-      // Exit if moveDownload Context Menu option is created by another window after adding event listeners??
       let moveDownloadMenuItem = domWindow.document.getElementById("moveDownload");
       if (moveDownloadMenuItem) {
         return;
@@ -215,6 +214,23 @@ var CloudDownloadsView = {
     }
   },
 
+  async _checkIfExistingCloudProviderDownloadSettings() {
+    // Check if user has previously set preferred download directoy path as
+    // one of cloud provider folder, if yes exit without showing notification
+    // TBD: Telemetry - how many such users
+    let dwnldDirPath = await Downloads.getPreferredDownloadsDirectory();
+    let hasExistingCloudDwnldDir = false;
+    this.providers.forEach((value, key) => {
+      if (dwnldDirPath.includes(value.downloadPath)) {
+        hasExistingCloudDwnldDir = true;
+      }
+    });
+    if (hasExistingCloudDwnldDir) {
+      return true;
+    }
+    return false;
+  },
+
   async showNotification() {
     let browserWindow = this.browserWindow;
 
@@ -240,17 +256,7 @@ var CloudDownloadsView = {
       return;
     }
 
-    // Check if user has previously set preferred download directoy path as
-    // one of cloud provider folder, if yes exit without showing notification
-    // TBD: Telemetry - how many such users
-    let dwnldDirPath = await Downloads.getPreferredDownloadsDirectory();
-    let hasExistingCloudDwnldDir = false;
-    providersMap.forEach((value, key) => {
-      if (dwnldDirPath.includes(value.downloadPath)) {
-        hasExistingCloudDwnldDir = true;
-      }
-    });
-    if (hasExistingCloudDwnldDir) {
+    if (await this._checkIfExistingCloudProviderDownloadSettings()) {
       return;
     }
 
@@ -378,6 +384,10 @@ var CloudDownloadsView = {
 
       // Exit if user has opted to store subsequent downloads in cloud provider folder
       if (CloudDownloadsInternal.preferredProviderKey) {
+        return;
+      }
+
+      if (await this._checkIfExistingCloudProviderDownloadSettings()) {
         return;
       }
 
