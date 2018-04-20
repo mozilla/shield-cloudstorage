@@ -28,4 +28,5 @@
       "provider_count": { "type": "string" },
       "provider_keys": { "type": "string" }
     }
+  }
 }
