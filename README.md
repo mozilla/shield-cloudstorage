@@ -3,7 +3,7 @@ Cloud storage Shield Study WebExtension Experiment
 
 ## Setup
 
-1. Get Firefox beta 60
+1. In Firefox, set boolean prefs `extension.legacy.enabled` to true and `xpinstall.signature.required` to false.
 2. Install
 
   ```

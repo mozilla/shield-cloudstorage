@@ -1,43 +1,31 @@
-/*** Common-styled clouddownloads notification ***/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[data-provider-icon="dropbox"] {
-  --provider-icon: url("/skin/dropbox.svg");
+#downloadsPanel-mainView richlistitem[type="download"] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage");
 }
 
-[data-provider-icon="googledrive"] {
-  --provider-icon: url("/skin/googledrive.svg");
+#downloadsRichListBox richlistitem.download[active] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage");
 }
 
-[data-provider-icon="default"] {
-  --provider-icon: url("/skin/download.svg");
-}
-
-richlistitem[type="download"] {
-  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
-}
-
-richlistitem.download[active] {
-  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage") !important;
+.providerIcon {
+   margin: 0 5px;
+   background: top right / 16px no-repeat;
 }
 
 .dropbox {
-  margin: 0 5px;
-  background: url("/skin/dropbox.svg") top right / 16px no-repeat;
+  background-image: url("/skin/dropbox.svg");
 }
 
 .googledrive {
-  margin: 0 5px;
-  background: url("/skin/googledrive.svg") top right / 16px no-repeat;
+  background-image: url("/skin/googledrive.svg");
 }
 
 #panelCloudNotification {
-  padding: 16px 16px 10px 16px;
+  padding: 16px 16px 10px;
   border-bottom: 1px solid var(--panel-separator-color);
-  min-height: 100px;
-}
-
-#panelCloudNotification:not([show]) {
-  display: none;
 }
 
 #panelCloudNotification .text-link {
@@ -53,6 +41,18 @@ richlistitem.download[active] {
   background: var(--provider-icon) top right / 32px no-repeat;
 }
 
+#cloudDownloadTypeIcon[data-provider-icon="dropbox"] {
+  --provider-icon: url("/skin/dropbox.svg");
+}
+
+#cloudDownloadTypeIcon[data-provider-icon="googledrive"] {
+  --provider-icon: url("/skin/googledrive.svg");
+}
+
+#cloudDownloadTypeIcon[data-provider-icon="default"] {
+  --provider-icon: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+}
+
 #cloudDownloadContainer {
   font-size: calc(125% * var(--downloads-item-font-size-factor));
 }
@@ -63,62 +63,54 @@ richlistitem.download[active] {
 
 #cloudDownloadDetail {
   opacity: var(--downloads-item-details-opacity);
-  margin-inline-end: 0px !important;
-}
-
-#multiProviderSelect:not([show]) {
-  display: none;
-}
-
-#multiProviderSelect radio {
-  -moz-appearance: none !important;
-  min-width: 16px;
-  height: 16px;
 }
 
 #multiProviderSelect .radio-icon {
-  margin-inline-end: 6px !important;
+  margin-inline-end: 6px;
   width: 16px;
   margin-inline-start: 6px;
   height: 16px;
 }
 
-#multiProviderSelect radio[provider="dropbox"] {
+.panelCloudNotificationUI-radio {
+  min-width: 16px;
+  height: 16px;
+}
+
+.panelCloudNotificationUI-radio[provider="dropbox"] {
   list-style-image: url("/skin/dropbox.svg");
 }
 
-#multiProviderSelect radio[provider="googledrive"] {
+.panelCloudNotificationUI-radio[provider="googledrive"] {
   list-style-image: url("/skin/googledrive.svg");
 }
 
-#panelCloudNotification button {
-  -moz-appearance: none !important;
-  flex: 1;
-  border: none;
-  background-color: #e4e4e4;
-  color: #0c0c0d !important;
+.panelCloudNotificationUI-button {
+  -moz-appearance: none;
+  color: #0c0c0d;
+  background-color: rgba(12, 12, 13, 0.1);
   border-radius: 2px;
-  font-size: 11px;
-  min-width: 210px !important;
-  height: 32px;
-  margin: 5px 5px 10px 0 !important;
+  text-shadow: none;
+  height: 30px;
+  min-width: 200px;
+  margin: 5px 5px 10px;
 }
 
-#panelCloudNotification button[default] {
-  color: #ffffff !important;
-  background-color: #0060df !important;
+.panelCloudNotificationUI-button[default] {
+  color: #ffffff;
+  background-color: #0060df;
 }
 
-#panelCloudNotification button[disabled] {
+.panelCloudNotificationUI-button[disabled] {
   opacity: 0.4;
 }
 
-#panelCloudNotification button:hover:not([disabled]) {
-    background-color: rgba(12, 12, 13, 0.2) !important;
+.panelCloudNotificationUI-button:hover:not([disabled]) {
+  background-color: rgba(12, 12, 13, 0.2);
 }
 
-#panelCloudNotification button[default]:hover:not([disabled]) {
-    background-color: #003eaa !important;
+.panelCloudNotificationUI-button[default]:hover:not([disabled]) {
+  background-color: #003eaa;
 }
 
 #moveDownload[hidden="true"] + menuseparator {

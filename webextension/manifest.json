@@ -25,19 +25,12 @@
   },
   "homepage_url": "https://github.com/mozilla/shield-cloudstorage/",
   "icons": {
-    "48": "./skin/download.svg",
-    "96": "./skin/download.svg"
+    "48": "./skin/sync2cloud.svg",
+    "96": "./skin/sync2cloud.svg"
   },
   "license": "MPL-2.0",
   "manifest_version": 2,
   "permissions": [
     "management"
-  ],
-  "web_accessible_resources": [
-    "./privileged/ui/cloudstorage.xml",
-    "./skin/clouddownloads.css",
-    "./skin/download.svg",
-    "./skin/dropbox.svg",
-    "./skin/googledrive.svg"
   ]
 }
