@@ -3,8 +3,14 @@ Cloud storage Shield Study WebExtension Experiment
 
 ## Setup
 
-1. In Firefox, set boolean prefs `extension.legacy.enabled` to true and `xpinstall.signature.required` to false.
-2. Install
+1. Get Firefox >=60
+2. Install shield-utils in extension
+
+  ```
+  npm install --save mozilla/shield-studies-addon-utils#develop
+  ```
+
+3. Install
 
   ```
   npm install -g web-ext  # just make it global!
@@ -37,7 +43,7 @@ Cloud storage Shield Study WebExtension Experiment
 5. For system default downloads in download panel, selecting context menu option 'Move to <provider>' moves download in provider folder
 
 ## Telemetry
-* TBD
+* [See Telemetry.json](docs/telemetry.json) for more details on what pings are sent by this extension.
 
 ## Helpful links
 * [Bug 1441949](https://bugzilla.mozilla.org/show_bug.cgi?id=1441949)

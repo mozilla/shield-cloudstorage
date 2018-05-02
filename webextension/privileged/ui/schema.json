@@ -12,6 +12,10 @@
           {
             "name": "path",
             "type": "string"
+          },
+          {
+            "name": "interval",
+            "type": "number"
           }
         ]
       }

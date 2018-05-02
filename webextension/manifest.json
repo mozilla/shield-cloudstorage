@@ -10,10 +10,27 @@
   "author": "Mozilla (https://mozilla.org/)",
   "background": {
     "scripts": [
+      "study.js",
       "background.js"
     ]
   },
   "experiment_apis": {
+    "prefs": {
+      "schema": "./privileged/prefs/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "./privileged/prefs/api.js",
+        "paths": [["prefs"]]
+      }
+    },
+    "study": {
+      "schema": "./privileged/study/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "./privileged/study/api.js",
+        "paths": [["study"]]
+      }
+    },
     "cloudstorage": {
       "schema": "./privileged/ui/schema.json",
       "parent": {
@@ -28,9 +45,9 @@
     "48": "./skin/sync2cloud.svg",
     "96": "./skin/sync2cloud.svg"
   },
-  "license": "MPL-2.0",
   "manifest_version": 2,
   "permissions": [
-    "management"
+    "management",
+    "storage"
   ]
 }
