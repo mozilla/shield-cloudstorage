@@ -1,26 +1,34 @@
 {
-  "name": "cloud-storage-study",
-  "version": "1.0.2",
-  "description": "Extension that facilitate pre-existing cloud provider users to save downloads in cloud",
-  "main": "bootstrap.js",
-  "repository": "https://github.com/mozilla/shield-cloudstorage.git",
-  "author": "Punam Dahiya <pdahiya@mozilla.com>",
-  "license": "MPL-2.0",
-  "keywords": [],
-  "dependencies": {},
+  "name": "cloud-storage-shield-study-webextension-experiment",
+  "description": "Cloud Storage Shield study as WebExtension Experiments",
+  "version": "1.0.0",
+  "author": "Mozilla (https://mozilla.org/)",
+  "bugs": {
+    "url": "https://github.com/mozilla/shield-cloudstorage/issues"
+  },
   "devDependencies": {
-    "eslint": "^4.4.1",
-    "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-mozilla": "^0.3.4",
-    "eslint-plugin-node": "^5.1.1",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "jshint": "^2.9.5"
+    "eslint": "4.19.1",
+    "eslint-plugin-json": "1.2.0",
+    "eslint-plugin-mozilla": "0.10.0",
+    "eslint-plugin-no-unsanitized": "3.0.0",
+    "npm-run-all": "4.1.2",
+    "stylelint": "9.2.0",
+    "stylelint-config-recommended": "2.1.0",
+    "web-ext": "2.6.0"
+  },
+  "homepage": "https://github.com/mozilla/shield-cloudstorage#readme",
+  "keywords": [],
+  "license": "MPL-2.0",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozilla/shield-cloudstorage.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "XPI=cloud-storage-study@shield.mozilla.org-v1.0.2.xpi bash ./bin/xpi.sh",
-    "eslint": "eslint addon --ext jsm --ext js --ext json --"
+    "firefox": "web-ext run -s webextension -f firefox",
+    "lint": "npm-run-all lint:*",
+    "lint:css": "stylelint 'webextension/skin/*.css'",
+    "lint:js": "eslint webextension --ext=js,json,jsm",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

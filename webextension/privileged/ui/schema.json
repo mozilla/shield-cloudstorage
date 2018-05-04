@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "cloudstorage",
+    "description": "Cloud Storage API init",
+    "functions": [
+      {
+        "name": "init",
+        "type": "function",
+        "description": "starts cloud storage extension",
+        "async": true,
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string"
+          }
+        ]
+      }
+    ]
+  }
+]

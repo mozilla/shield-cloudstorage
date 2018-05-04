@@ -21,6 +21,10 @@
         // Read the src path from download type icon
         // e.g. moz-icon:///<home>/dropbox/downloads/test.png?size=32&state=normal
         // and use it to highlight respective downloaded item with storage provider icon
+        // set the cloudstorage attribute on download element with value as provider name
+        // for download element in provider download folder and 'localdownloads' for downloads in default download folder
+        this.setAttribute("cloudstorage","localdownloads");
+
         let parent = document.getAnonymousElementByAttribute(this, "class", "downloadMainArea").firstChild;
         let downloadBlockBadge = document.getAnonymousElementByAttribute(this, "class", "downloadBlockedBadge");
 
@@ -33,10 +37,12 @@
         let result = providers.find(checkProvider, this);
         switch (result) {
           case "dropbox":
-            providerElem.setAttribute("class","dropbox");
+            providerElem.setAttribute("class","providerIcon dropbox");
+            this.setAttribute("cloudstorage","dropbox");
             break;
           case "google drive":
-            providerElem.setAttribute("class","googledrive");
+            providerElem.setAttribute("class","providerIcon googledrive");
+            this.setAttribute("cloudstorage","googledrive");
             break;
         }
       ]]></constructor>

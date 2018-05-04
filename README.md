@@ -1,36 +1,46 @@
 # shield-cloudstorage
-Add-on for cloud storage Fx56 shield experiment
+Cloud storage Shield Study WebExtension Experiment
 
-## install
+## Setup
 
-`npm install`
-`npm run build`
+1. In Firefox, set boolean prefs `extension.legacy.enabled` to true and `xpinstall.signature.required` to false.
+2. Install
+
+  ```
+  npm install -g web-ext  # just make it global!
+  npm run firefox
+  ```
 
 ## pre-requisite
 - Desktop with cloud storage provider client such as [Dropbox](https://www.dropbox.com/install)
 
 ## in Firefox:
 
-1. `about:debugging > [load temporary addon] > choose `dist/shield-cloudstorage.xpi`
-2. `tools > Web Developer > Browser Console`
-3. Open link e.g. https://www.mozilla.org/en-US/firefox/all/
-4. Click on any download link. If you see the prompt 'You have chosen to open' asking to choose between open and save file - select save file.
-5. If Cloud Storage API has never been initialized before first download initializes API and subsequent downloads shows door hangar prompt.
+1. `tools > Web Developer > Browser Console`
+2. Open link e.g. https://www.mozilla.org/en-US/firefox/all/
+3. Click on any download link. Notification shows inside Download Panel
+4. If Cloud Storage API has never been initialized before first download initializes API and subsequent downloads shows notification.
+5. Right click on the downloaded item, shows 'Move to <provider>' option in context menu for default downloads e.g. ~/Downloads
 
 ## Results/ Effects:
 
-1. Click on Download link shows door hangar prompt asking user to opt-in to cloud storage
-2. Result expected with different options selected in door hangar prompt
-* Save to provider download folder -  Save downloaded file to provider local download folder e.g. ~/Dropbox/Downloads
-* Cancel - Save file to user default download folder e.g. ~/Downloads or user selected custom folder
-* Save with always remember checked - Sets provider download folder as default download by updating pref browser.download.folderlist as 3 and any subsequent download will be saved to provider download folder. In about:preferences, under 'Downloads' user is shown an option 'Save to Provider Name'
-* Cancel with always remember checked - Set provider as rejected in cloud.services.rejected.key  pref and user will never be prompted again to use the provider. If a user has multiple provider on desktop , other providers will be used in door hangar prompt.
+1. Click on Download link shows notification asking user to opt-in to cloud storage
+2. Result expected with different options selected in notification
+* Save to provider app -  Save all subsequent download to provider local download folder e.g. ~/Dropbox/Downloads. This sets 'cloud.services.storage.key' pref to provider key and 'browser.download.folderList' pref to value 3. In about:prefernces under Downloads a third radio option displays indicating user opted-in setting.
 
-3. cloud.services.prompt.interval pref is set using value promptInterval in addon/Config.jsm, pref sets the interval at which user should be prompted again.
+* Not Now - Closes Notification to be shown after a configurable interval
 
-4. Downloaded item will be marked with provider icon in Download history
+3. cloud.services.prompt.interval pref sets the interval at which user should be prompted again.
+
+4. Downloaded item in cloud provider folder will be marked with provider icon in Download history shown in Download panel and Tools -> Downloads
+
+5. For system default downloads in download panel, selecting context menu option 'Move to <provider>' moves download in provider folder
+
+## Telemetry
+* TBD
 
 ## Helpful links
-* [Bug 1399231](https://bugzilla.mozilla.org/show_bug.cgi?id=1399231)
-* [Bug 1399198](https://bugzilla.mozilla.org/show_bug.cgi?id=1399198)
-* [Bug 1357160](https://bugzilla.mozilla.org/show_bug.cgi?id=1357160)
+* [Bug 1441949](https://bugzilla.mozilla.org/show_bug.cgi?id=1441949)
+* [Bug 1447521](https://bugzilla.mozilla.org/show_bug.cgi?id=1447521)
+* [Bug 1450016](https://bugzilla.mozilla.org/show_bug.cgi?id=1450016)
+* [Mockups](https://mozilla.invisionapp.com/share/PKFN61KFZ25#/screens/290895622)

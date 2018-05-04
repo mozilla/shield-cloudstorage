@@ -1,0 +1,118 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#downloadsPanel-mainView richlistitem[type="download"] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage");
+}
+
+#downloadsRichListBox richlistitem.download[active] {
+  -moz-binding: url("/privileged/ui/cloudstorage.xml#cloud-storage");
+}
+
+.providerIcon {
+   margin: 0 5px;
+   background: top right / 16px no-repeat;
+}
+
+.dropbox {
+  background-image: url("/skin/dropbox.svg");
+}
+
+.googledrive {
+  background-image: url("/skin/googledrive.svg");
+}
+
+#panelCloudNotification {
+  padding: 16px 16px 10px;
+  border-bottom: 1px solid var(--panel-separator-color);
+}
+
+#panelCloudNotification .text-link {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+#cloudDownloadTypeIcon {
+  margin-inline-end: 5px;
+  margin-top: 5px;
+  width: 32px;
+  height: 32px;
+  background: var(--provider-icon) top right / 32px no-repeat;
+}
+
+#cloudDownloadTypeIcon[data-provider-icon="dropbox"] {
+  --provider-icon: url("/skin/dropbox.svg");
+}
+
+#cloudDownloadTypeIcon[data-provider-icon="googledrive"] {
+  --provider-icon: url("/skin/googledrive.svg");
+}
+
+#cloudDownloadTypeIcon[data-provider-icon="default"] {
+  --provider-icon: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
+}
+
+#cloudDownloadContainer {
+  font-size: calc(125% * var(--downloads-item-font-size-factor));
+}
+
+#cloudDownloadTitle {
+  font-weight: 500;
+}
+
+#cloudDownloadDetail {
+  opacity: var(--downloads-item-details-opacity);
+}
+
+#multiProviderSelect .radio-icon {
+  margin-inline-end: 6px;
+  width: 16px;
+  margin-inline-start: 6px;
+  height: 16px;
+}
+
+.panelCloudNotificationUI-radio {
+  min-width: 16px;
+  height: 16px;
+}
+
+.panelCloudNotificationUI-radio[provider="dropbox"] {
+  list-style-image: url("/skin/dropbox.svg");
+}
+
+.panelCloudNotificationUI-radio[provider="googledrive"] {
+  list-style-image: url("/skin/googledrive.svg");
+}
+
+.panelCloudNotificationUI-button {
+  -moz-appearance: none;
+  color: #0c0c0d;
+  background-color: rgba(12, 12, 13, 0.1);
+  border-radius: 2px;
+  text-shadow: none;
+  height: 30px;
+  min-width: 200px;
+  margin: 5px 5px 10px;
+}
+
+.panelCloudNotificationUI-button[default] {
+  color: #ffffff;
+  background-color: #0060df;
+}
+
+.panelCloudNotificationUI-button[disabled] {
+  opacity: 0.4;
+}
+
+.panelCloudNotificationUI-button:hover:not([disabled]) {
+  background-color: rgba(12, 12, 13, 0.2);
+}
+
+.panelCloudNotificationUI-button[default]:hover:not([disabled]) {
+  background-color: #003eaa;
+}
+
+#moveDownload[hidden="true"] + menuseparator {
+  display:none;
+}
