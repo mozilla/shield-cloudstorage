@@ -96,6 +96,10 @@
   margin: 5px 5px 10px;
 }
 
+.panelCloudNotificationUI-button:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
 .panelCloudNotificationUI-button[default] {
   color: #ffffff;
   background-color: #0060df;

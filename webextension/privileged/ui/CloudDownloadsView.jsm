@@ -133,6 +133,7 @@ var CloudDownloadsView = {
       aPopupMenu.insertBefore(fragment, menuItem.nextSibling);
       aPopupMenu.addEventListener("command", this);
       aPopupMenu.addEventListener("popupshowing", this);
+      browserWindow.document.getElementById("appMenu-popup").addEventListener("popupshowing", this);
 
       // Find local preferred download directory path
       // to display correct icon in Local Download context menu option
@@ -152,6 +153,7 @@ var CloudDownloadsView = {
     aPopupMenu.removeEventListener("command", this);
     aPopupMenu.removeEventListener("popupshowing", this);
     aPopupMenu.removeChild(moveDownloadMenuItem);
+    browserWindow.document.getElementById("appMenu-popup").removeEventListener("popupshowing", this);
 
     const moveDownloadSeparator = browserWindow.document.getElementById("moveDownloadSeparator");
     aPopupMenu.removeChild(moveDownloadSeparator);
@@ -175,7 +177,8 @@ var CloudDownloadsView = {
     if (!panelCloudNotification) {
       return;
     }
-    panelCloudNotification.removeEventListener("click", this);
+    panelCloudNotification.removeEventListener("command", this);
+    browserWindow.document.getElementById("cloudDownloadPreference").removeEventListener("click", this);
 
     const panelDownload = browserWindow.document.getElementById("downloadsPanel-mainView");
     panelDownload.removeChild(panelCloudNotification);
@@ -283,6 +286,8 @@ var CloudDownloadsView = {
 
     const radiogroup = document.createElement("radiogroup");
     radiogroup.id = "multiProviderSelect";
+    radiogroup.selectedIndex = -1;
+    radiogroup.value = "";
     cloudDownloadContainer.appendChild(radiogroup);
 
     providerContainer.appendChild(cloudDownloadContainer);
@@ -378,7 +383,8 @@ var CloudDownloadsView = {
     document.getElementById("cloudDownloadCancel").setAttribute("label", "Not Now");
     panelCloudNotification = document.getElementById("panelCloudNotification");
     panelCloudNotification.removeAttribute("hidden");
-    panelCloudNotification.addEventListener("click", this);
+    panelCloudNotification.addEventListener("command", this);
+    document.getElementById("cloudDownloadPreference").addEventListener("click", this);
   },
 
   _addRadioOption(key, providerName, document) {
@@ -479,15 +485,6 @@ var CloudDownloadsView = {
   },
 
   handleEvent(event) {
-    // Handle multiple provider displayed as options in notification
-    if (event.target.parentElement.id === "multiProviderSelect") {
-      const cloudDownloadSave = event.currentTarget.querySelector("#cloudDownloadSave");
-      cloudDownloadSave.setAttribute("label", event.target.label);
-      cloudDownloadSave.setAttribute("providerKey", event.target.id);
-      cloudDownloadSave.removeAttribute("disabled");
-      return;
-    }
-
     // Handle rendering right provider in context menu when shown
     if (event.type === "popupshowing") {
       const element = event.target.triggerNode;
@@ -503,6 +500,15 @@ var CloudDownloadsView = {
         return;
       }
       this._displayMoveToCloudContextMenuItem(element);
+    }
+
+    // Handle multiple provider displayed as options in notification
+    if (event.target.parentElement.id === "multiProviderSelect") {
+      const cloudDownloadSave = event.currentTarget.querySelector("#cloudDownloadSave");
+      cloudDownloadSave.setAttribute("label", event.target.label);
+      cloudDownloadSave.setAttribute("providerKey", event.target.id);
+      cloudDownloadSave.removeAttribute("disabled");
+      return;
     }
 
     if (event.target.id === "moveDownload" || event.target.parentElement.id === "moveDownloadSubMenu") {
