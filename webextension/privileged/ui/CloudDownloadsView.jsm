@@ -133,7 +133,7 @@ var CloudDownloadsView = {
       aPopupMenu.insertBefore(fragment, menuItem.nextSibling);
       aPopupMenu.addEventListener("command", this);
       aPopupMenu.addEventListener("popupshowing", this);
-      browserWindow.document.getElementById("appMenu-popup").addEventListener("popupshowing", this);
+      browserWindow.document.getElementById("PanelUI-downloads").addEventListener("popupshowing", this);
 
       // Find local preferred download directory path
       // to display correct icon in Local Download context menu option
@@ -153,7 +153,7 @@ var CloudDownloadsView = {
     aPopupMenu.removeEventListener("command", this);
     aPopupMenu.removeEventListener("popupshowing", this);
     aPopupMenu.removeChild(moveDownloadMenuItem);
-    browserWindow.document.getElementById("appMenu-popup").removeEventListener("popupshowing", this);
+    browserWindow.document.getElementById("PanelUI-downloads").removeEventListener("popupshowing", this);
 
     const moveDownloadSeparator = browserWindow.document.getElementById("moveDownloadSeparator");
     aPopupMenu.removeChild(moveDownloadSeparator);
