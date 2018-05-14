@@ -16,8 +16,20 @@
           {
             "name": "interval",
             "type": "number"
+          },
+          {
+            "name": "variation",
+            "type": "string"
           }
         ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onRecordTelemetry",
+        "type": "function",
+        "description": "Event to record telemetry in database",
+        "parameters": []
       }
     ]
   }

@@ -64,11 +64,11 @@ class StudyLifeCycleHandler {
       );
     }
     // browser.browserAction.setTitle({ title: studyInfo.variation.name });
-    console.log(// eslint-disable-line no-console
-      `Changed the browser action title to the variation name: ${
-        studyInfo.variation.name
-      }`,
-    );
+    // browser.study.log(
+    //  `Changed the browser action title to the variation name: ${
+    //    studyInfo.variation.name
+    //  }`,
+    // );
 
     try {
       let interval = 0;
@@ -86,13 +86,18 @@ class StudyLifeCycleHandler {
         break;
       }
 
-      browser.cloudstorage.init(browser.runtime.getURL("./skin/clouddownloads.css"), interval).then(
+      browser.cloudstorage.onRecordTelemetry.addListener(
+        (value) => {
+          browser.study.sendTelemetry(value);
+        },
+      );
+
+      browser.cloudstorage.init(browser.runtime.getURL("./skin/clouddownloads.css"), interval, studyInfo.variation.name).then(
         result => {
-        // Remove when background js is integrated with shield utils
-          console.log(result); // eslint-disable-line no-console
+          // browser.study.log(result);
         });
     } catch (e) {
-      console.log(e); // eslint-disable-line no-console
+      // browser.study.log(e);
     }
   }
 
@@ -102,7 +107,7 @@ class StudyLifeCycleHandler {
    * - calls cleanup
    */
   async handleStudyEnding(ending) {
-    console.log("study wants to end:", ending); // eslint-disable-line no-console
+    // browser.study.log("study wants to end:", ending);
     ending.urls.forEach(async url => await browser.tabs.create({ url }));
     switch (ending.reason) {
     default:

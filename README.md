@@ -42,6 +42,15 @@ Cloud storage Shield Study WebExtension Experiment
 
 5. For system default downloads in download panel, selecting context menu option 'Move to <provider>' moves download in provider folder
 
+
+## Shield Study Variations:
+In this shield study, we have two experimental branches based on notification interval times. Planning to experiment with three groups
+1. Control group (no cloud storage feature)
+2. notification-interval-longer - Cohort that’s shown notification in download panel after 2 days interval (since last notification shown and dismissed by clicking button Not Now)
+3. notification-interval-short - Cohort that’s shown notification after shorter interval - 1 day
+
+To force override a variation, set preference 'cloud.services.shield.variation' with the variation name
+
 ## Telemetry
 * [See Telemetry.json](docs/telemetry.json) for more details on what pings are sent by this extension.
 

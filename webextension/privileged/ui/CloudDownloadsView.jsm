@@ -31,6 +31,8 @@ const CLOUD_SERVICES_PREF = "cloud.services.";
 const CLOUD_PROVIDER_DEFAULT_ICON = "default";
 
 var CloudDownloadsView = {
+  eventEmitter: null,
+  studyVariation: null,
   stylesURL: null,      // Property storing URL to clouddownloads css
   providers: null,      // Property of type Map object storing providers data
   isInitialized: false, // Property to track API has added required observers
@@ -56,6 +58,8 @@ var CloudDownloadsView = {
     if (provider) {
       const isExist = await CloudDownloadsInternal.checkIfAssetExists(provider.downloadPath);
       if (!isExist) {
+        // Log telemetry about GDrive Custom path
+        this.eventEmitter.emit("record-telemetry", { message: "gdrive_custom_path" });
         providers.delete(GDRIVE_KEY);
       }
     }
@@ -74,13 +78,6 @@ var CloudDownloadsView = {
       if (!browserWindow || !browserWindow.document) {
         return;
       }
-
-      // There is no other API that awaits the result of CloudStorageInternal.init()
-      // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
-      // before asking CloudStorage API for storage providers info
-      await CloudStorage.getDownloadFolder();
-      const providers = await CloudStorage.getStorageProviders();
-      this.providers = await this._filterProvidersMap(providers);
 
       // Continue only if cloud providers exists on user device
       if (this.providers.size === 0) {
@@ -230,16 +227,40 @@ var CloudDownloadsView = {
     Services.wm.removeListener(WindowListener);
   },
 
+  // Log provider count and provider keys existing on user desktop
+  async handleAddOnInitTelemetry() {
+    // There is no other API that awaits the result of CloudStorageInternal.init()
+    // Invoke getDownloadFolder on CloudStorage API to ensure API is initialized
+    // before asking CloudStorage API for storage providers info
+    await CloudStorage.getDownloadFolder();
+    const providers = await CloudStorage.getStorageProviders();
+    const keys = Array.from(providers.keys());
+
+    this.eventEmitter.emit("record-telemetry", {
+      message: "addon_init",
+      provider_count: providers.size.toString(),
+      provider_keys: keys.join(","),
+    });
+
+    this.providers = await this._filterProvidersMap(providers);
+  },
+
   async toggleAPIEnabledState() {
     try {
       if (!this.gIsAPIEnabled) {
         if (this.isInitialized) {
-          this.uninitWindowListener();
+          if (this.studyVariation !== "control") {
+            this.uninitWindowListener();
+          }
           this.unRegisterNotification();
         }
         return;
       }
-      await this.initWindowListener();
+
+      await this.handleAddOnInitTelemetry();
+      if (this.studyVariation !== "control") {
+        await this.initWindowListener();
+      }
       this.registerNotification();
     } catch (err) {
       Cu.reportError(err);
@@ -249,7 +270,10 @@ var CloudDownloadsView = {
   async observe(subject, topic, data) {
     switch (topic) {
     case "cloudstorage-prompt-notification":
-      await CloudDownloadsView.showNotification();
+      CloudDownloadsView.eventEmitter.emit("record-telemetry", { message: "download_started" });
+      if (CloudDownloadsView.studyVariation !== "control") {
+        await CloudDownloadsView.showNotification();
+      }
       break;
     }
   },
@@ -337,6 +361,9 @@ var CloudDownloadsView = {
     }
 
     if (CloudDownloadsInternal.checkIfExistingCloudProviderDownloadSettings()) {
+      this.eventEmitter.emit("record-telemetry", {
+        message: "existing_cloud_provider_download_settings"
+      });
       return;
     }
 
@@ -511,6 +538,8 @@ var CloudDownloadsView = {
       return;
     }
 
+    let telemetryData = null;
+
     if (event.target.id === "moveDownload" || event.target.parentElement.id === "moveDownloadSubMenu") {
       const providerKey = event.target.getAttribute("providerKey");
       if (!providerKey) {
@@ -533,6 +562,13 @@ var CloudDownloadsView = {
         CloudDownloadsInternal.selectedProvider = { providerKey, value: this.providers.get(providerKey) };
         CloudDownloadsInternal.handleMove(download);
       }
+      telemetryData = {
+        message: "prompt_move_download_context_menu",
+        provider: providerKey,
+        provider_count: this.providers.size.toString(),
+        timestamp: new Date().toString(),
+      };
+      this.eventEmitter.emit("record-telemetry", telemetryData);
       return;
     }
 
@@ -545,19 +581,43 @@ var CloudDownloadsView = {
         // Prepare for future downloads move to Download Folder by checking
         // if Download folder exists in cloud provider folder, if not create one
         CloudDownloadsInternal.checkProviderDownloadFolder();
+
+        // Access lazy preference getter property first time so that subsequent updates
+        // in respective preferences trigger preference observer.
+        CloudDownloadsInternal.useDownloadDirPref;
+        CloudDownloadsInternal.folderListPref;
+
+        telemetryData = {
+          message: "prompt_opted_in",
+          provider: providerKey,
+          timestamp: new Date().toString(),
+        };
+        this.eventEmitter.emit("record-telemetry", telemetryData);
         event.currentTarget.setAttribute("hidden", "true");
       }
       break;
-    case "cloudDownloadCancel":
+    case "cloudDownloadCancel": {
       // Set interval when notification was last shown
-      Services.prefs.setIntPref(CLOUD_SERVICES_PREF + "lastprompt",
-        Math.floor(Date.now() / 1000));
+      const timestamp = Math.floor(Date.now() / 1000);
+      Services.prefs.setIntPref(CLOUD_SERVICES_PREF + "lastprompt", timestamp);
+      telemetryData = {
+        message: "prompt_cancel_click",
+        provider: event.target.getAttribute("providerKey"),
+        timestamp: new Date().toString(),
+      };
+      this.eventEmitter.emit("record-telemetry", telemetryData);
       event.currentTarget.setAttribute("hidden", "true");
       break;
+    }
     case "cloudDownloadPreference": {
       const origin = null;
       const entryPoint = "CloudStorage";
       this.getRecentWindow().openPreferences("paneGeneral", {origin, urlParams: {entrypoint: entryPoint}});
+      telemetryData = {
+        message: "prompt_preferences",
+        timestamp: new Date().toString(),
+      };
+      this.eventEmitter.emit("record-telemetry", telemetryData);
       break;
     }
     }
@@ -599,7 +659,8 @@ var CloudDownloadsInternal = {
     if (!CloudDownloadsView.providers) {
       return false;
     }
-    const dwnldDirPath = this.downloadDirSetting; // await Downloads.getPreferredDownloadsDirectory();
+
+    const dwnldDirPath = this.downloadDirSetting;
     const providerValues = [...CloudDownloadsView.providers.values()];
     return providerValues.some(v => dwnldDirPath.includes(v.downloadPath));
   },
@@ -657,12 +718,17 @@ var CloudDownloadsInternal = {
     movedDownload.succeeded = true;
     await publicList.add(movedDownload);
 
-    // Update destination path used in download history library panel
-    PlacesUtils.annotations.setPageAnnotation(
-      NetUtil.newURI(download.source.url),
-      "downloads/destinationFileURI",
-      Services.io.newFileURI(destDir).spec, 0,
-      PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+    try {
+      // Update destination path used in download history library panel
+      PlacesUtils.annotations.setPageAnnotation(
+        NetUtil.newURI(download.source.url),
+        "downloads/destinationFileURI",
+        Services.io.newFileURI(destDir).spec, 0,
+        PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+    } catch (err) {
+      // Catch errors thrown during setPageAnnotation - Bug 1298362
+      // Fixes Issue #34
+    }
 
     // Explicitly updates the state of a moved download
     movedDownload.refresh().catch(Cu.reportError);
@@ -705,6 +771,23 @@ var CloudDownloadsInternal = {
       }
     }
   },
+
+  /**
+   * In preferences UI, under Downloads, user can opt-out of cloud storage.
+   * Observe download preferences and notify telemetry if user is 'opted_in'
+   * or 'opted_out' of cloud storage.
+   */
+  downloadPrefObserve() {
+    // Once opted-in, set send subsequent download pref changes to telemetry
+    if (this.preferredProviderKey) {
+      const telemetryData = {
+        message: "download_prefs",
+        cloud_storage_state: (this.folderListPref === 3 && this.useDownloadDirPref) ? "opted_in" : "opted_out",
+        timestamp: new Date().toString(),
+      };
+      CloudDownloadsView.eventEmitter.emit("record-telemetry", telemetryData);
+    }
+  }
 };
 
 
@@ -756,5 +839,11 @@ XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "downloadDirSettin
 
 XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "preferredProviderKey",
   CLOUD_SERVICES_PREF + "storage.key", "");
+
+XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "useDownloadDirPref",
+  "browser.download.useDownloadDir", true, () => CloudDownloadsInternal.downloadPrefObserve());
+
+XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "folderListPref",
+  "browser.download.folderList", 1, () => CloudDownloadsInternal.downloadPrefObserve());
 
 CloudDownloadsView.toggleAPIEnabledState();

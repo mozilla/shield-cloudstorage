@@ -35,13 +35,10 @@ const studySetup = {
   endings: {
     /** standard endings */
     "user-disable": {
-      baseUrl: "http://www.example.com/?reason=user-disable",
-    },
-    ineligible: {
-      baseUrl: "http://www.example.com/?reason=ineligible",
+      baseUrl: "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey",
     },
     expired: {
-      baseUrl: "http://www.example.com/?reason=expired",
+      baseUrl: "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey",
     },
     dataPermissionsRevoked: {
       baseUrl: null,
@@ -63,6 +60,8 @@ const studySetup = {
     shortDuration: 1,
     longDuration: 2
   },
+
+  variationOverridePreference: "cloud.services.shield.variation",
 
   // Study branches and sample weights, overweighing feature branches
   weightedVariations: [

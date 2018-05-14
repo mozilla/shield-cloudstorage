@@ -9,6 +9,13 @@
 
 "use strict";
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+
+// eslint-disable-next-line no-undef
+const { EventManager } = ExtensionCommon;
+// eslint-disable-next-line no-undef
+const { EventEmitter } = ExtensionUtils;
 
 this.cloudstorage = class extends ExtensionAPI {
   getAPI(context) {
@@ -33,10 +40,14 @@ this.cloudstorage = class extends ExtensionAPI {
       },
     });
 
+    const cloudStorageEventEmitter = new EventEmitter();
+
     return {
       cloudstorage: {
-        async init(path, interval) {
+        async init(path, interval, variation) {
           CloudDownloadsView.stylesURL = path;
+          CloudDownloadsView.studyVariation = variation;
+          CloudDownloadsView.eventEmitter = cloudStorageEventEmitter;
 
           const isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
           if (isAPIEnabled) {
@@ -51,6 +62,26 @@ this.cloudstorage = class extends ExtensionAPI {
           }
           return path;
         },
+
+        onRecordTelemetry: new EventManager(
+          context,
+          "cloudStorage.onRecordTelemetry",
+          fire => {
+            const listener = (eventName, value) => {
+              fire.async(value);
+            };
+            cloudStorageEventEmitter.on(
+              "record-telemetry",
+              listener,
+            );
+            return () => {
+              cloudStorageEventEmitter.off(
+                "record-telemetry",
+                listener,
+              );
+            };
+          },
+        ).api(),
       }
     };
   }
