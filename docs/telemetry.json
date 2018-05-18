@@ -8,9 +8,9 @@
   "definitions": {
     "branch_message": {
       "type": "string",
-      "enum": ["addon_init", "download_prefs", "prompt_save_click", "prompt_cancel_click",
+      "enum": ["addon_init", "download_prefs", "prompt_opted_in", "prompt_cancel_click",
                "prompt_preferences", "prompt_move_download_context_menu", "download_started",
-               "gdrive_custom_path"]
+               "gdrive_custom_path", "existing_cloud_provider_download_setting"]
     },
     "provider_key": {
       "type": "string",

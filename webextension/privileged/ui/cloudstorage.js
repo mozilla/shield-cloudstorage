@@ -9,6 +9,13 @@
 
 "use strict";
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+
+// eslint-disable-next-line no-undef
+const { EventManager } = ExtensionCommon;
+// eslint-disable-next-line no-undef
+const { EventEmitter } = ExtensionUtils;
 
 this.cloudstorage = class extends ExtensionAPI {
   getAPI(context) {
@@ -33,10 +40,14 @@ this.cloudstorage = class extends ExtensionAPI {
       },
     });
 
+    const cloudStorageEventEmitter = new EventEmitter();
+
     return {
       cloudstorage: {
-        async init(path) {
+        async init(path, interval, variation) {
           CloudDownloadsView.stylesURL = path;
+          CloudDownloadsView.studyVariation = variation;
+          CloudDownloadsView.eventEmitter = cloudStorageEventEmitter;
 
           const isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
           if (isAPIEnabled) {
@@ -45,12 +56,32 @@ this.cloudstorage = class extends ExtensionAPI {
             // Set cloud.services.api.enabled pref to true on install and enabling the extension
             // Changing the prefs will initialize and trigger  toggleAPIEnabledState
             // because the CloudDownloadsView will observe the pref
-            const interval = 0; // Interval to be picked from Study Utils Config
+            // Interval used to display notification at specified interval
             Services.prefs.setBoolPref("cloud.services.api.enabled", true);
             Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }
           return path;
         },
+
+        onRecordTelemetry: new EventManager(
+          context,
+          "cloudStorage.onRecordTelemetry",
+          fire => {
+            const listener = (eventName, value) => {
+              fire.async(value);
+            };
+            cloudStorageEventEmitter.on(
+              "record-telemetry",
+              listener,
+            );
+            return () => {
+              cloudStorageEventEmitter.off(
+                "record-telemetry",
+                listener,
+              );
+            };
+          },
+        ).api(),
       }
     };
   }

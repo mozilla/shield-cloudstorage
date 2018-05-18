@@ -3,8 +3,14 @@ Cloud storage Shield Study WebExtension Experiment
 
 ## Setup
 
-1. In Firefox, set boolean prefs `extension.legacy.enabled` to true and `xpinstall.signature.required` to false.
-2. Install
+1. Get Firefox >=60
+2. Install shield-utils in extension
+
+  ```
+  npm install --save mozilla/shield-studies-addon-utils#develop
+  ```
+
+3. Install
 
   ```
   npm install -g web-ext  # just make it global!
@@ -36,8 +42,17 @@ Cloud storage Shield Study WebExtension Experiment
 
 5. For system default downloads in download panel, selecting context menu option 'Move to <provider>' moves download in provider folder
 
+
+## Shield Study Variations:
+In this shield study, we have two experimental branches based on notification interval times. Planning to experiment with three groups
+1. Control group (no cloud storage feature)
+2. notification-interval-longer - Cohort that’s shown notification in download panel after 2 days interval (since last notification shown and dismissed by clicking button Not Now)
+3. notification-interval-short - Cohort that’s shown notification after shorter interval - 1 day
+
+To force override a variation, set preference 'cloud.services.shield.variation' with the variation name
+
 ## Telemetry
-* TBD
+* [See Telemetry.json](docs/telemetry.json) for more details on what pings are sent by this extension.
 
 ## Helpful links
 * [Bug 1441949](https://bugzilla.mozilla.org/show_bug.cgi?id=1441949)
