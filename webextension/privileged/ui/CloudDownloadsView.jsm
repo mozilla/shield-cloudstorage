@@ -566,7 +566,6 @@ var CloudDownloadsView = {
         message: "prompt_move_download_context_menu",
         provider: providerKey,
         provider_count: this.providers.size.toString(),
-        timestamp: new Date().toString(),
       };
       this.eventEmitter.emit("record-telemetry", telemetryData);
       return;
@@ -590,7 +589,7 @@ var CloudDownloadsView = {
         telemetryData = {
           message: "prompt_opted_in",
           provider: providerKey,
-          timestamp: new Date().toString(),
+          provider_count: this.providers.size.toString(),
         };
         this.eventEmitter.emit("record-telemetry", telemetryData);
         event.currentTarget.setAttribute("hidden", "true");
@@ -602,8 +601,7 @@ var CloudDownloadsView = {
       Services.prefs.setIntPref(CLOUD_SERVICES_PREF + "lastprompt", timestamp);
       telemetryData = {
         message: "prompt_cancel_click",
-        provider: event.target.getAttribute("providerKey"),
-        timestamp: new Date().toString(),
+        provider_count: this.providers.size.toString(),
       };
       this.eventEmitter.emit("record-telemetry", telemetryData);
       event.currentTarget.setAttribute("hidden", "true");
@@ -615,7 +613,6 @@ var CloudDownloadsView = {
       this.getRecentWindow().openPreferences("paneGeneral", {origin, urlParams: {entrypoint: entryPoint}});
       telemetryData = {
         message: "prompt_preferences",
-        timestamp: new Date().toString(),
       };
       this.eventEmitter.emit("record-telemetry", telemetryData);
       break;
@@ -783,7 +780,6 @@ var CloudDownloadsInternal = {
       const telemetryData = {
         message: "download_prefs",
         cloud_storage_state: (this.folderListPref === 3 && this.useDownloadDirPref) ? "opted_in" : "opted_out",
-        timestamp: new Date().toString(),
       };
       CloudDownloadsView.eventEmitter.emit("record-telemetry", telemetryData);
     }

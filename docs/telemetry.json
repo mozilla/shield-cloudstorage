@@ -14,7 +14,7 @@
     },
     "provider_key": {
       "type": "string",
-      "enum": ["Dropbox", "GDrive", "local"]
+      "enum": ["Dropbox", "GDrive", "localdownloads"]
     },
     "cloud_storage_state": {
       "type": "string",
@@ -24,7 +24,6 @@
       "message": { "$ref": "#/definitions/branch_message" },
       "provider": { "$ref": "#/definitions/provider_key" },
       "cloud_storage_state": { "$ref": "#/definitions/cloud_storage_state" },
-      "timestamp": { "type": "string" },
       "provider_count": { "type": "string" },
       "provider_keys": { "type": "string" }
     }
