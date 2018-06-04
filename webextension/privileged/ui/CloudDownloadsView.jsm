@@ -514,8 +514,8 @@ var CloudDownloadsView = {
   handleEvent(event) {
     // Handle rendering right provider in context menu when shown
     if (event.type === "popupshowing") {
-      const element = event.target.triggerNode;
-      if (!element) {
+      const downloadsEl = event.target.triggerNode;
+      if (!downloadsEl) {
         return;
       }
 
@@ -526,7 +526,15 @@ var CloudDownloadsView = {
         }
         return;
       }
-      this._displayMoveToCloudContextMenuItem(element);
+
+      const download = downloadsEl.ownerGlobal.DownloadsView.itemForElement(downloadsEl).download;
+
+      // Check if there is a completed download to be moved to provider folder, if not exit
+      if (!(download && download.succeeded)) {
+        return;
+      }
+
+      this._displayMoveToCloudContextMenuItem(downloadsEl);
     }
 
     // Handle multiple provider displayed as options in notification
@@ -549,8 +557,8 @@ var CloudDownloadsView = {
       const downloadsEl = event.target.parentNode.triggerNode;
       const download = downloadsEl.ownerGlobal.DownloadsView.itemForElement(downloadsEl).download;
 
-      // Check if there is a download to be moved to provider folder, if not exit
-      if (!download) {
+      // Check if there is a completed download to be moved to provider folder, if not exit
+      if (!(download && download.succeeded)) {
         return;
       }
 
