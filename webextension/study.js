@@ -18,7 +18,7 @@
  *
  * Will be augmented by 'getStudySetup'
  */
-const studySetup = {
+const baseStudySetup = {
   // used for activeExperiments tagging (telemetryEnvironment.setActiveExperiment)
   activeExperimentName: browser.runtime.id,
 
@@ -40,20 +40,7 @@ const studySetup = {
     expired: {
       baseUrl: "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey",
     },
-    dataPermissionsRevoked: {
-      baseUrl: null,
-      study_state: "ended-neutral",
-    },
-
-    /** User defined endings */
-    "some-study-defined-ending": {
-      baseUrl: null,
-      study_state: "ended-neutral",
-    },
   },
-
-  // logging
-  logLevel: 10,
 
   // Interval in day(s) used by variations
   interval: {
@@ -103,39 +90,27 @@ const studySetup = {
  * (Guards against Normandy or other deployment mistakes or inadequacies)
  *
  * This implementation caches in local storage to speed up second run.
+ *
+ * @returns boolean answer about whether the user should be
+ *       allowed to enroll in the study
  */
-async function shouldAllowEnroll() {
-  // Cached answer.  Used on 2nd run
-  let allowed = await browser.storage.local.get("allowedToEnroll");
-  if (allowed) return true;
-
-  /*
-  First run, we must calculate the answer.
-  If false, the study will endStudy with 'ineligible' during `setup`
-  */
-  // could have other reasons to be eligible, such add-ons, prefs
-  const dataPermissions = await browser.study.dataPermissions();
-  allowed = dataPermissions.shield;
-
-  // cache the answer
-  await browser.storage.local.set({ allowedToEnroll: allowed });
-  return allowed;
+function shouldAllowEnroll() {
+  return true;
 }
 
 /**
- * Augment studySetup with a few async values
+ * Augment declarative studySetup with any necessary async values
+ *
+ * @return {object} studySetup A complete study setup object
  */
-async function getStudySetup() {
-  const id = browser.runtime.id;
-  const prefs = {
-    variation: `shield.${id}.variation`,
-    firstRunTimestamp: `shield.${id}.firstRunTimestamp`,
-  };
-  prefs;
-  studySetup.allowEnroll = await shouldAllowEnroll();
+function getStudySetup() {
+  const studySetup = Object.assign({}, baseStudySetup);
+
+  studySetup.allowEnroll = shouldAllowEnroll();
   studySetup.testing = {
-    // variation: await browser.prefs.getStringPref(prefs.variation);
-    // firstRunTimestamp: await browser.prefs.getStringPref(prefs.firstRunTimestamp);
+    /* Example: override testing keys various ways, such as by prefs. (TODO) */
+    variation: null, // await browser.prefs.getStringPref(prefs.variation);
+    firstRunTimestamp: null, // await browser.prefs.getStringPref(prefs.firstRunTimestamp);
   };
   return studySetup;
 }

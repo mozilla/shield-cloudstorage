@@ -4,16 +4,10 @@ Cloud storage Shield Study WebExtension Experiment
 ## Setup
 
 1. Get Firefox >=60
-2. Install shield-utils in extension
+2. Install
 
   ```
-  npm install --save mozilla/shield-studies-addon-utils#develop
-  ```
-
-3. Install
-
-  ```
-  npm install -g web-ext  # just make it global!
+  npm install
   npm run firefox
   ```
 
