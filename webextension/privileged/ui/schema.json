@@ -22,13 +22,6 @@
             "type": "string"
           }
         ]
-      },
-      {
-        "name": "cleanUpPrefs",
-        "type": "function",
-        "description": "clean up prefs at the end of study",
-        "parameters": [
-        ]
       }
     ],
     "events": [
