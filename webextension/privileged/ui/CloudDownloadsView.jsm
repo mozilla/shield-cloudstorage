@@ -475,6 +475,13 @@ var CloudDownloadsView = {
     if (menuItem) {
       menuItem.setAttribute("hidden", "true");
 
+      const download = downloadElement.ownerGlobal.DownloadsView.itemForElement(downloadElement).download;
+
+      // Check if there is a completed download to be moved to provider folder, if not exit
+      if (!(download && download.succeeded)) {
+        return;
+      }
+
       // Exit if user has opted to store subsequent downloads in cloud provider folder
       if (CloudDownloadsInternal.preferredProviderKey) {
         return;
@@ -524,13 +531,6 @@ var CloudDownloadsView = {
         if (menuItem) {
           menuItem.setAttribute("hidden", "true");
         }
-        return;
-      }
-
-      const download = downloadsEl.ownerGlobal.DownloadsView.itemForElement(downloadsEl).download;
-
-      // Check if there is a completed download to be moved to provider folder, if not exit
-      if (!(download && download.succeeded)) {
         return;
       }
 
