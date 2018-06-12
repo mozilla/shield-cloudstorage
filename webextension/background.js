@@ -44,8 +44,8 @@ class StudyLifeCycleHandler {
      * - `setup` can end with 'ineligible' due to 'allowEnroll' key in first session.
      *
      */
-    browser.study.onEndStudy.addListener(this.handleStudyEnding);
-    browser.study.onReady.addListener(this.enableFeature);
+    browser.study.onEndStudy.addListener(this.handleStudyEnding.bind(this));
+    browser.study.onReady.addListener(this.enableFeature.bind(this));
   }
 
   /**
@@ -59,7 +59,8 @@ class StudyLifeCycleHandler {
    * @returns {undefined}
    */
   enableFeature(studyInfo) {
-    if (studyInfo.timeUntilExpire) {
+    const { delayInMinutes } = studyInfo;
+    if (delayInMinutes !== undefined) {
       const alarmName = `${browser.runtime.id}:studyExpiration`;
       const alarmListener = async alarm => {
         if (alarm.name === alarmName) {
@@ -69,7 +70,7 @@ class StudyLifeCycleHandler {
       };
       browser.alarms.onAlarm.addListener(alarmListener);
       browser.alarms.create(alarmName, {
-        delayInMinutes: studyInfo.timeUntilExpire / (1000 * 60),
+        delayInMinutes,
       });
     }
 

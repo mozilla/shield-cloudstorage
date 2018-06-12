@@ -35,20 +35,16 @@ const baseStudySetup = {
   endings: {
     /** standard endings */
     "user-disable": {
-      baseUrl: "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey",
+      baseUrl: [
+        "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey/?reason=user-disable",
+      ],
     },
     expired: {
-      baseUrl: "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey",
+      baseUrl: [
+        "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey/?reason=expired",
+      ],
     },
   },
-
-  // Interval in day(s) used by variations
-  interval: {
-    shortDuration: 1,
-    longDuration: 2
-  },
-
-  variationOverridePreference: "cloud.services.shield.variation",
 
   // Study branches and sample weights, overweighing feature branches
   weightedVariations: [
@@ -74,8 +70,7 @@ const baseStudySetup = {
   // Optional: testing overrides.
   // Set from prefs in getStudySetup
   testing: {
-    variation: null,
-    firstRunTimestamp: null,
+    variationName: null,
   },
 };
 
@@ -109,8 +104,7 @@ function getStudySetup() {
   studySetup.allowEnroll = shouldAllowEnroll();
   studySetup.testing = {
     /* Example: override testing keys various ways, such as by prefs. (TODO) */
-    variation: null, // await browser.prefs.getStringPref(prefs.variation);
-    firstRunTimestamp: null, // await browser.prefs.getStringPref(prefs.firstRunTimestamp);
+    variationName: null, // await browser.prefs.getStringPref(prefs.variation);
   };
   return studySetup;
 }

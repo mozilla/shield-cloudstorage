@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "applications": {
     "gecko": {
-      "id": "cloudstorage-webextensionExperiment@shield.mozilla.org"
+      "id": "cloudstorage-webextensionExperiment@shield.mozilla.org",
+      "strict_min_version": "60.0"
     }
   },
   "author": "Mozilla (https://mozilla.org/)",
   "background": {
     "scripts": [
-      "study.js",
+      "studySetup.js",
       "background.js"
     ]
   },
