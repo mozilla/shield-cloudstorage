@@ -23,24 +23,20 @@ this.cloudstorage = class extends ExtensionAPI {
       context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm")
     );
 
-    function cleanUpPrefs() {
-      // Ensure cloud storage study prefs are cleared
-      ["lastprompt", "interval.prompt", "storage.key", "api.enabled"].forEach(pref => {
-        Services.prefs.clearUserPref(`cloud.services.${pref}`);
-      });
-    }
+    const cloudStorageEventEmitter = new EventEmitter();
 
     context.extension.callOnClose({
       close: () => {
         if (context.extension.shutdownReason === "ADDON_UNINSTALL" ||
-            context.extension.shutdownReason === "ADDON_DISABLE") {
+           context.extension.shutdownReason === "ADDON_DISABLE") {
           Services.prefs.setBoolPref("cloud.services.api.enabled", false);
-          cleanUpPrefs();
+          // Ensure cloud storage study prefs are cleared
+          ["lastprompt", "interval.prompt", "storage.key", "api.enabled"].forEach(pref => {
+            Services.prefs.clearUserPref(`cloud.services.${pref}`);
+          });
         }
       },
     });
-
-    const cloudStorageEventEmitter = new EventEmitter();
 
     return {
       cloudstorage: {

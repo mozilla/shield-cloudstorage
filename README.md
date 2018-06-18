@@ -4,16 +4,10 @@ Cloud storage Shield Study WebExtension Experiment
 ## Setup
 
 1. Get Firefox >=60
-2. Install shield-utils in extension
+2. Install
 
   ```
-  npm install --save mozilla/shield-studies-addon-utils#develop
-  ```
-
-3. Install
-
-  ```
-  npm install -g web-ext  # just make it global!
+  npm install
   npm run firefox
   ```
 
@@ -49,7 +43,7 @@ In this shield study, we have two experimental branches based on notification in
 2. notification-interval-longer - Cohort that’s shown notification in download panel after 2 days interval (since last notification shown and dismissed by clicking button Not Now)
 3. notification-interval-short - Cohort that’s shown notification after shorter interval - 1 day
 
-To force override a variation, set preference 'cloud.services.shield.variation' with the variation name
+To force override a variation, set testing.variationName in studySetup.js
 
 ## Telemetry
 * [See Telemetry.json](docs/telemetry.json) for more details on what pings are sent by this extension.

@@ -4,25 +4,18 @@
   "version": "1.0.0",
   "applications": {
     "gecko": {
-      "id": "cloudstorage-webextensionExperiment@shield.mozilla.org"
+      "id": "cloudstorage-webextensionExperiment@shield.mozilla.org",
+      "strict_min_version": "60.0"
     }
   },
   "author": "Mozilla (https://mozilla.org/)",
   "background": {
     "scripts": [
-      "study.js",
+      "studySetup.js",
       "background.js"
     ]
   },
   "experiment_apis": {
-    "prefs": {
-      "schema": "./privileged/prefs/schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "script": "./privileged/prefs/api.js",
-        "paths": [["prefs"]]
-      }
-    },
     "study": {
       "schema": "./privileged/study/schema.json",
       "parent": {
@@ -48,6 +41,6 @@
   "manifest_version": 2,
   "permissions": [
     "management",
-    "storage"
+    "alarms"
   ]
 }
