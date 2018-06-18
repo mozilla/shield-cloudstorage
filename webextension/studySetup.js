@@ -35,12 +35,12 @@ const baseStudySetup = {
   endings: {
     /** standard endings */
     "user-disable": {
-      baseUrl: [
+      baseUrls: [
         "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey/?reason=user-disable",
       ],
     },
     expired: {
-      baseUrl: [
+      baseUrls: [
         "https://www.surveygizmo.com/s3/4361888/Cloud-Storage-Phase-2-Post-Survey/?reason=expired",
       ],
     },
