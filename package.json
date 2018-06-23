@@ -28,11 +28,11 @@
     "url": "git+https://github.com/mozilla/shield-cloudstorage.git"
   },
   "scripts": {
-    "firefox": "web-ext run -s webextension -f firefox",
+    "firefox": "web-ext run -s src -f firefox",
     "lint": "npm-run-all lint:*",
-    "lint:css": "stylelint 'webextension/skin/*.css'",
-    "lint:js": "eslint webextension --ext=js,json,jsm",
-    "postinstall": "copyStudyUtils webextension/privileged",
+    "lint:css": "stylelint 'src/skin/*.css'",
+    "lint:js": "eslint src --ext=js,json,jsm",
+    "postinstall": "copyStudyUtils src/privileged",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
