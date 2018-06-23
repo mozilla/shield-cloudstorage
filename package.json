@@ -28,7 +28,7 @@
     "url": "git+https://github.com/mozilla/shield-cloudstorage.git"
   },
   "scripts": {
-    "firefox": "web-ext run -s src -f firefox",
+    "firefox": "web-ext run",
     "lint": "npm-run-all lint:*",
     "lint:css": "stylelint 'src/skin/*.css'",
     "lint:js": "eslint src --ext=js,json,jsm",
