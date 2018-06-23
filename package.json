@@ -1,7 +1,7 @@
 {
   "name": "cloud-storage-shield-study-webextension-experiment",
   "description": "Cloud Storage Shield study as WebExtension Experiments",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Mozilla (https://mozilla.org/)",
   "bugs": {
     "url": "https://github.com/mozilla/shield-cloudstorage/issues"
