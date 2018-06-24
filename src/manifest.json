@@ -1,7 +1,7 @@
 {
   "name": "Cloud Storage Shield Study Web Extension Experiment (CSSSWEE)",
   "description": "Cloud Storage Shield study as WebExtension Experiments",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "applications": {
     "gecko": {
       "id": "cloudstorage-webextensionExperiment@shield.mozilla.org",
