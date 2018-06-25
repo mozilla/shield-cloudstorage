@@ -236,6 +236,10 @@ var CloudDownloadsView = {
     const providers = await CloudStorage.getStorageProviders();
     const keys = Array.from(providers.keys());
 
+    if (!this.eventEmitter) {
+      return;
+    }
+
     this.eventEmitter.emit("record-telemetry", {
       message: "addon_init",
       provider_count: providers.size.toString(),

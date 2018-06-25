@@ -22,6 +22,12 @@
             "type": "string"
           }
         ]
+      },
+      {
+        "name": "uninit",
+        "type": "function",
+        "description": "handle cloud storage extension uninstall. This unsets prefs and is safe to call more than once",
+        "parameters": []
       }
     ],
     "events": [

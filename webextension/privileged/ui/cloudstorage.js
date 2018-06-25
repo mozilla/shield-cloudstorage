@@ -31,9 +31,9 @@ this.cloudstorage = class extends ExtensionAPI {
            context.extension.shutdownReason === "ADDON_DISABLE") {
           Services.prefs.setBoolPref("cloud.services.api.enabled", false);
           // Ensure cloud storage study prefs are cleared
-          ["lastprompt", "interval.prompt", "storage.key", "api.enabled"].forEach(pref => {
+          for (let pref of ["lastprompt", "interval.prompt", "storage.key", "api.enabled"]) {
             Services.prefs.clearUserPref(`cloud.services.${pref}`);
-          });
+          }
         }
       },
     });
@@ -57,6 +57,15 @@ this.cloudstorage = class extends ExtensionAPI {
             Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }
           return path;
+        },
+
+        uninit() {
+          // Set API enabled false to uninitialize listeners in CloudDownloadsView
+          Services.prefs.setBoolPref("cloud.services.api.enabled", false);
+          // Ensure cloud storage study prefs are cleared
+          for (let pref of ["lastprompt", "interval.prompt", "storage.key", "api.enabled"]) {
+            Services.prefs.clearUserPref(`cloud.services.${pref}`);
+          }
         },
 
         onRecordTelemetry: new EventManager(

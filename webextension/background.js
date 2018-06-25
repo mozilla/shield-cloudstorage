@@ -117,6 +117,8 @@ class StudyLifeCycleHandler {
       await browser.tabs.create({ url });
     }
 
+    browser.cloudstorage.uninit();
+
     // actually remove the addon.
     return browser.management.uninstallSelf();
   }
