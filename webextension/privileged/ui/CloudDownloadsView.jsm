@@ -261,6 +261,15 @@ var CloudDownloadsView = {
         return;
       }
 
+      // Exit toggleAPIEnabledState if we don't have a valid styles URL yet
+      // This is seen on restart of browser after add-on install when
+      // CloudDownloadsView load triggers toggleAPIEnabledState (Fixes issue #51)
+      // Subsequent browser restart should trigger toggleAPIEnabledState
+      // with valid stylesURL from init method inside provileged/ui/cloudstorage.js
+      if (!this.stylesURL) {
+        return;
+      }
+
       await this.handleAddOnInitTelemetry();
       if (this.studyVariation !== "control") {
         await this.initWindowListener();
@@ -853,5 +862,3 @@ XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "useDownloadDirPre
 
 XPCOMUtils.defineLazyPreferenceGetter(CloudDownloadsInternal, "folderListPref",
   "browser.download.folderList", 1, () => CloudDownloadsInternal.downloadPrefObserve());
-
-CloudDownloadsView.toggleAPIEnabledState();

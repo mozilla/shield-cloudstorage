@@ -34,6 +34,8 @@ this.cloudstorage = class extends ExtensionAPI {
           for (let pref of ["lastprompt", "interval.prompt", "storage.key", "api.enabled"]) {
             Services.prefs.clearUserPref(`cloud.services.${pref}`);
           }
+          // Unload the JS module
+          Cu.unload(context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm"));
         }
       },
     });
@@ -46,9 +48,7 @@ this.cloudstorage = class extends ExtensionAPI {
           CloudDownloadsView.eventEmitter = cloudStorageEventEmitter;
 
           const isAPIEnabled = Services.prefs.getBoolPref("cloud.services.api.enabled", false);
-          if (isAPIEnabled) {
-            await CloudDownloadsView.toggleAPIEnabledState();
-          } else {
+          if (!isAPIEnabled) {
             // Set cloud.services.api.enabled pref to true on install and enabling the extension
             // Changing the prefs will initialize and trigger  toggleAPIEnabledState
             // because the CloudDownloadsView will observe the pref
@@ -56,6 +56,7 @@ this.cloudstorage = class extends ExtensionAPI {
             Services.prefs.setBoolPref("cloud.services.api.enabled", true);
             Services.prefs.setCharPref("cloud.services.interval.prompt", interval);
           }
+          await CloudDownloadsView.toggleAPIEnabledState();
           return path;
         },
 
@@ -66,6 +67,8 @@ this.cloudstorage = class extends ExtensionAPI {
           for (let pref of ["lastprompt", "interval.prompt", "storage.key", "api.enabled"]) {
             Services.prefs.clearUserPref(`cloud.services.${pref}`);
           }
+          // Unload the JS module
+          Cu.unload(context.extension.rootURI.resolve("privileged/ui/CloudDownloadsView.jsm"));
         },
 
         onRecordTelemetry: new EventManager(
